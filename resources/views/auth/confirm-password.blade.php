@@ -4,10 +4,17 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>{{ config('app.name', 'HRIS') }} - Confirm Password</title>
+        <title>{{ config('app.name') }} - Confirm Password</title>
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+        @php $favicon = \App\Domains\Settings\Models\Setting::where('key', 'favicon')->value('value'); @endphp
+        @if($favicon)
+            <link rel="icon" type="image/x-icon" href="{{ \Illuminate\Support\Facades\Storage::url($favicon) }}">
+        @else
+            <link rel="icon" href="{{ asset('favicon.ico') }}">
+        @endif
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite
         <style>body { font-family: 'Inter', sans-serif; }</style>
     </head>
     <body class="bg-gray-50 min-h-screen flex items-center justify-center p-8">
@@ -16,7 +23,7 @@
                 <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mr-3">
                     <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </div>
-                <span class="text-2xl font-bold text-gray-900">{{ config('app.name', 'HRIS') }}</span>
+                <span class="text-2xl font-bold text-gray-900">{{ config('app.name') }}</span>
             </div>
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
                 <div class="text-center mb-6">

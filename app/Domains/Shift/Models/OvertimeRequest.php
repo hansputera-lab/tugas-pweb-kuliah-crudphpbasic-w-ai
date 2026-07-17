@@ -20,6 +20,7 @@ class OvertimeRequest extends Model
         'approved_by',
         'approved_at',
         'rejection_reason',
+        'approval_notes',
     ];
 
     protected $casts = [

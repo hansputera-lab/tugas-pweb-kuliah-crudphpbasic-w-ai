@@ -55,6 +55,7 @@ class OvertimeRequestRepository
             'status' => 'approved',
             'approved_by' => $approver->id,
             'approved_at' => now(),
+            'approval_notes' => $notes,
         ]);
 
         return $request->fresh(['employee.user', 'employee.department', 'approver']);

@@ -13,6 +13,8 @@ use App\Domains\Payroll\Models\Payslip;
 use App\Domains\Payroll\Repositories\PayrollDocumentRepository;
 use App\Domains\Payroll\Repositories\PayrollItemRepository;
 use App\Domains\Payroll\Repositories\PayrollPeriodRepository;
+use App\Domains\Payroll\Repositories\PayrollRunDetailRepository;
+use App\Domains\Payroll\Repositories\EmployeeTaxStatusRepository;
 use App\Domains\Settings\Services\SettingService;
 use App\Models\User;
 use Carbon\Carbon;
@@ -25,7 +27,11 @@ class PayrollService
         protected PayrollDocumentRepository $documentRepo,
         protected EmployeeRepository $employeeRepo,
         protected AttendanceRepository $attendanceRepo,
-        protected SettingService $settingService
+        protected SettingService $settingService,
+        protected BpjsCalculator $bpjsCalculator,
+        protected Pph21Calculator $pph21Calculator,
+        protected PayrollRunDetailRepository $runDetailRepo,
+        protected EmployeeTaxStatusRepository $taxStatusRepo,
     ) {}
 
     public function getPeriodsByYearMonth(int $year, int $month): ?PayrollPeriod
@@ -69,6 +75,8 @@ class PayrollService
         $components = PayrollComponent::active()->get();
         $employees = $this->employeeRepo->getActive();
         $count = 0;
+
+        $this->runDetailRepo->deleteForPeriod($period->id);
 
         foreach ($employees as $employee) {
             $position = $employee->currentPosition();
@@ -125,10 +133,57 @@ class PayrollService
             $item->recompute();
             $item->save();
 
+            $this->calculateBpjsAndPph21($item, $employee, $period);
+
             $count++;
         }
 
         return $count;
+    }
+
+    protected function calculateBpjsAndPph21(PayrollItem $item, Employee $employee, PayrollPeriod $period): void
+    {
+        $gajiPokok = (float) ($item->base_salary ?? 0);
+        $allowances = [];
+        $deductions = [];
+
+        $bpjs = $this->bpjsCalculator->calculateForEmployee($employee, $gajiPokok, $allowances);
+
+        $taxStatus = $this->taxStatusRepo->findByEmployee($employee->id);
+        $pph21 = $taxStatus
+            ? $this->pph21Calculator->calculateMonthlyAmount(
+                $employee, $taxStatus, $gajiPokok, $allowances, $deductions, $bpjs,
+                $period->year, $period->month
+            )
+            : null;
+
+        $totalAllowances = (float) $item->total_allowances;
+        $totalDeductions = (float) $item->total_deductions;
+        $netSalary = $gajiPokok + $totalAllowances - $totalDeductions
+            - $bpjs->getTotalEmployee() - ($pph21?->pph21PerBulan ?? 0);
+
+        $this->runDetailRepo->createOrUpdate($item->id, [
+            'payroll_period_id' => $period->id,
+            'employee_id' => $employee->id,
+            'gross_income' => $gajiPokok,
+            'bpjs_kes_employee' => $bpjs->employeeContributions['kes'] ?? 0,
+            'bpjs_kes_employer' => $bpjs->employerContributions['kes'] ?? 0,
+            'bpjs_jht_employee' => $bpjs->employeeContributions['jht'] ?? 0,
+            'bpjs_jht_employer' => $bpjs->employerContributions['jht'] ?? 0,
+            'bpjs_jp_employee' => $bpjs->employeeContributions['jp'] ?? 0,
+            'bpjs_jp_employer' => $bpjs->employerContributions['jp'] ?? 0,
+            'bpjs_jkk_employer' => $bpjs->employerContributions['jkk'] ?? 0,
+            'bpjs_jkm_employer' => $bpjs->employerContributions['jkm'] ?? 0,
+            'total_bpjs_employee' => $bpjs->getTotalEmployee(),
+            'total_bpjs_employer' => $bpjs->getTotalEmployer(),
+            'net_income_before_tax' => $gajiPokok + $totalAllowances - $totalDeductions,
+            'pph21_monthly' => $pph21?->pph21PerBulan ?? 0,
+            'pph21_ter_rate' => $pph21?->terRatePct ?? null,
+            'pph21_method' => 'ter',
+            'pph21_dtp_amount' => 0,
+            'take_home_pay' => max(0, $netSalary),
+            'calculated_at' => now(),
+        ]);
     }
 
     public function updateItem(PayrollItem $item, array $data): PayrollItem

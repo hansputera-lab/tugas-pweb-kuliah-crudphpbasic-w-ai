@@ -16,7 +16,6 @@ $hasAnyHR = $hasAny([
     'view_positions', 'manage_positions',
     'view_attendance', 'manage_attendance',
     'view_leave', 'manage_leave', 'approve_leave',
-    'view_payroll', 'manage_payroll',
     'view_reimbursement', 'manage_reimbursement', 'approve_reimbursement',
     'view_shifts', 'manage_shifts', 'manage_overtime', 'approve_overtime',
     'view_performance', 'manage_performance',
@@ -24,6 +23,7 @@ $hasAnyHR = $hasAny([
     'view_settings', 'manage_settings',
     'view_users', 'manage_users',
     'view_reports',
+    'view_audit_log',
 ]);
 @endphp
 
@@ -70,12 +70,6 @@ $hasAnyHR = $hasAny([
                     Leave
                 </a>
             @endif
-            @if($hasAny(['view_payroll', 'manage_payroll']))
-                <a href="{{ route('payroll.index') }}" @click="sidebarOpen = false" class="{{ $cls }} {{ $isActive(['payroll.*']) }}">
-                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    Payroll
-                </a>
-            @endif
             @if($hasAny(['view_reimbursement', 'approve_reimbursement']))
                 <a href="{{ route('reimbursements.index') }}" @click="sidebarOpen = false" class="{{ $cls }} {{ $isActive(['reimbursements.*']) }}">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
@@ -104,6 +98,49 @@ $hasAnyHR = $hasAny([
                 <a href="{{ route('reports.employees') }}" @click="sidebarOpen = false" class="{{ $cls }} {{ $isActive(['reports.*']) }}">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055zM19.194 11A7.001 7.001 0 0013 4.806V11h6.194z"/></svg>
                     Reports
+                </a>
+            @endif
+            @if($hasAny(['view_payroll', 'manage_payroll', 'bpjs.view', 'pph21.view', 'payroll.preview', 'payroll.run']))
+                <div class="mt-4">
+                    <p class="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Payroll & Tax</p>
+                    <nav class="mt-2 space-y-1">
+                        @if($hasAny(['view_payroll', 'manage_payroll']))
+                            <a href="{{ route('payroll.index') }}" @click="sidebarOpen = false" class="{{ $cls }} {{ $isActive(['payroll.*']) && !request()->routeIs('payroll.bpjs.*', 'payroll.pph21.*', 'payroll.tax-status.*', 'payroll.run.*') }}">
+                                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Payroll
+                            </a>
+                        @endif
+                        @if($hasAny(['bpjs.view', 'bpjs.manage']))
+                            <a href="{{ route('payroll.bpjs.settings') }}" @click="sidebarOpen = false" class="{{ $cls }} {{ $isActive(['payroll.bpjs.*']) }}">
+                                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                BPJS Settings
+                            </a>
+                        @endif
+                        @if($hasAny(['pph21.view', 'pph21.manage']))
+                            <a href="{{ route('payroll.pph21.settings') }}" @click="sidebarOpen = false" class="{{ $cls }} {{ $isActive(['payroll.pph21.*']) }}">
+                                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                PPh 21 Settings
+                            </a>
+                        @endif
+                        @if($hasAny(['pph21.view', 'pph21.manage']))
+                            <a href="{{ route('payroll.tax-status.index') }}" @click="sidebarOpen = false" class="{{ $cls }} {{ $isActive(['payroll.tax-status.*']) }}">
+                                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+                                Tax Status
+                            </a>
+                        @endif
+                        @if($hasAny(['payroll.preview', 'payroll.run']))
+                            <a href="{{ route('payroll.run.index') }}" @click="sidebarOpen = false" class="{{ $cls }} {{ $isActive(['payroll.run.*']) }}">
+                                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                Run Payroll
+                            </a>
+                        @endif
+                    </nav>
+                </div>
+            @endif
+            @if($can('view_audit_log'))
+                <a href="{{ route('audit-log.index') }}" @click="sidebarOpen = false" class="{{ $cls }} {{ $isActive(['audit-log.*']) }}">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Audit Log
                 </a>
             @endif
             @if($hasAny(['view_settings', 'manage_settings']))

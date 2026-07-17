@@ -10,14 +10,14 @@
             <p class="mt-1 text-sm text-gray-500">Configure application settings</p>
         </div>
 
-        <form action="{{ route('settings.update') }}" method="POST" class="space-y-6">
+        <form action="{{ route('settings.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
             @method('PUT')
 
             {{-- Company Settings --}}
             <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5">
                 <h2 class="text-lg font-semibold text-gray-900">Company Settings</h2>
-                <p class="mt-1 text-sm text-gray-500">Basic company information</p>
+                <p class="mt-1 text-sm text-gray-500">Basic company information and branding</p>
 
                 <div class="mt-6 space-y-4">
                     <div>
@@ -25,6 +25,62 @@
                         <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $settings['company_name'] ?? '') }}"
                                class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                         @error('company_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="border-t border-gray-100 pt-4">
+                        <h3 class="text-sm font-semibold text-gray-900">Branding</h3>
+                        <p class="text-xs text-gray-500">Upload your company logo (PNG or SVG, max 2MB)</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="logo_light" class="block text-sm font-medium text-gray-700">Logo (Light BG)</label>
+                            <input type="file" name="logo_light" id="logo_light" accept="image/png,image/svg+xml,image/jpeg"
+                                   class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100">
+                            @error('logo_light') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            @if($settings['logo_light'] ?? null)
+                                <div class="mt-2 flex items-center gap-3">
+                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($settings['logo_light']) }}" class="h-10 w-auto border rounded p-1">
+                                    <form action="{{ route('settings.logo.remove', 'light') }}" method="POST" onsubmit="return confirm('Remove this logo?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                                    </form>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div>
+                            <label for="logo_dark" class="block text-sm font-medium text-gray-700">Logo (Dark BG)</label>
+                            <input type="file" name="logo_dark" id="logo_dark" accept="image/png,image/svg+xml,image/jpeg"
+                                   class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100">
+                            @error('logo_dark') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            @if($settings['logo_dark'] ?? null)
+                                <div class="mt-2 flex items-center gap-3">
+                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($settings['logo_dark']) }}" class="h-10 w-auto border rounded p-1">
+                                    <form action="{{ route('settings.logo.remove', 'dark') }}" method="POST" onsubmit="return confirm('Remove this logo?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                                    </form>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="favicon" class="block text-sm font-medium text-gray-700">Favicon</label>
+                        <input type="file" name="favicon" id="favicon" accept="image/x-icon,image/png,image/svg+xml"
+                               class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100">
+                        <p class="mt-1 text-xs text-gray-400">ICO, PNG, or SVG (max 1MB)</p>
+                        @error('favicon') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        @if($settings['favicon'] ?? null)
+                            <div class="mt-2 flex items-center gap-3">
+                                <img src="{{ \Illuminate\Support\Facades\Storage::url($settings['favicon']) }}" class="h-8 w-8 border rounded">
+                                <form action="{{ route('settings.logo.remove', 'favicon') }}" method="POST" onsubmit="return confirm('Remove favicon?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                                </form>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

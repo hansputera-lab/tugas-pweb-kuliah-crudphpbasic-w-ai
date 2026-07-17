@@ -44,6 +44,16 @@ class PayrollPeriod extends Model
             ->translatedFormat('F Y');
     }
 
+    public function getPeriodNameAttribute(): string
+    {
+        return $this->label;
+    }
+
+    public function getIsActiveAttribute(): bool
+    {
+        return $this->status === 'draft';
+    }
+
     public function isDraft(): bool
     {
         return $this->status === 'draft';

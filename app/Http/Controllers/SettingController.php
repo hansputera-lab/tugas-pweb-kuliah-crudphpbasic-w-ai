@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\Settings\Repositories\SettingRepository;
 use App\Domains\Settings\Services\SettingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
     public function __construct(
-        protected SettingService $settingService
+        protected SettingService $settingService,
+        protected SettingRepository $settingRepo
     ) {}
 
     public function index()
@@ -36,11 +39,33 @@ class SettingController extends Controller
             'kpi_grade_b_min' => 'required|integer|min:0|max:100',
             'kpi_grade_c_min' => 'required|integer|min:0|max:100',
             'kpi_grade_d_min' => 'required|integer|min:0|max:100',
+            'logo_light' => 'nullable|image|mimes:png,svg,jpg,jpeg|max:2048',
+            'logo_dark' => 'nullable|image|mimes:png,svg,jpg,jpeg|max:2048',
+            'favicon' => 'nullable|image|mimes:ico,png,svg|max:1024',
         ]);
+
+        foreach (['logo_light', 'logo_dark', 'favicon'] as $field) {
+            if ($request->hasFile($field)) {
+                $file = $request->file($field);
+                $filename = $field . '.' . $file->extension();
+                $path = $file->storeAs('logo', $filename, 'public');
+                $validated[$field] = $path;
+            }
+        }
 
         $this->settingService->update($validated);
 
         return redirect()->route('settings.index')
             ->with('success', 'Settings updated successfully.');
+    }
+
+    public function removeLogo(string $type)
+    {
+        $path = $this->settingRepo->get("logo_{$type}");
+        if ($path) {
+            Storage::disk('public')->delete($path);
+            $this->settingRepo->set("logo_{$type}", null, 'string');
+        }
+        return back()->with('success', 'Logo removed.');
     }
 }

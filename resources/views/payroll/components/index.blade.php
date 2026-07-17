@@ -23,19 +23,23 @@
                     @csrf
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Name</label>
-                        <input type="text" name="name" required placeholder="e.g. Tunjangan Transport"
+                        <input type="text" name="name" required maxlength="255" placeholder="e.g. Tunjangan Transport"
                                class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Type</label>
-                        <select name="type" class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <select name="type" required
+                                class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <option value="">Select Type</option>
                             <option value="allowance">Allowance</option>
                             <option value="deduction">Deduction</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Calculation</label>
-                        <select name="calculation" class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <select name="calculation" required
+                                class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <option value="">Select Calculation</option>
                             <option value="fixed">Fixed Amount</option>
                             <option value="percentage">Percentage of Base Salary</option>
                         </select>
@@ -66,7 +70,7 @@
                             @method('PUT')
                             <div class="w-40">
                                 <label class="text-xs font-medium text-gray-500">Name</label>
-                                <input type="text" name="name" value="{{ $component->name }}" class="mt-1 block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <input type="text" name="name" value="{{ $component->name }}" required maxlength="255" class="mt-1 block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
                             <div>
                                 <label class="text-xs font-medium text-gray-500">Type</label>
@@ -84,7 +88,7 @@
                             </div>
                             <div class="w-24">
                                 <label class="text-xs font-medium text-gray-500">Value</label>
-                                <input type="number" step="0.01" name="value" value="{{ $component->value }}" class="mt-1 block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <input type="number" step="0.01" name="value" value="{{ $component->value }}" required min="0" class="mt-1 block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
                             <label class="flex items-center gap-1 text-xs text-gray-600">
                                 <input type="checkbox" name="is_active" value="1" {{ $component->is_active ? 'checked' : '' }}> Active

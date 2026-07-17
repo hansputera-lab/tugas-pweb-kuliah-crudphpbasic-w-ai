@@ -31,12 +31,22 @@ use App\Domains\Leave\Repositories\LeaveBalanceRepository;
 use App\Domains\Leave\Repositories\LeaveRequestRepository;
 use App\Domains\Position\Models\Position;
 use App\Domains\Position\Repositories\PositionRepository;
+use App\Domains\Payroll\Models\BpjsSetting;
+use App\Domains\Payroll\Models\EmployeeBpjsOverride;
+use App\Domains\Payroll\Models\EmployeeTaxStatus;
 use App\Domains\Payroll\Models\PayrollDocument;
 use App\Domains\Payroll\Models\PayrollItem;
 use App\Domains\Payroll\Models\PayrollPeriod;
+use App\Domains\Payroll\Models\PayrollRunDetail;
+use App\Domains\Payroll\Models\Pph21Setting;
+use App\Domains\Payroll\Repositories\BpjsSettingRepository;
+use App\Domains\Payroll\Repositories\EmployeeBpjsOverrideRepository;
+use App\Domains\Payroll\Repositories\EmployeeTaxStatusRepository;
 use App\Domains\Payroll\Repositories\PayrollDocumentRepository;
 use App\Domains\Payroll\Repositories\PayrollItemRepository;
 use App\Domains\Payroll\Repositories\PayrollPeriodRepository;
+use App\Domains\Payroll\Repositories\PayrollRunDetailRepository;
+use App\Domains\Payroll\Repositories\Pph21SettingRepository;
 use App\Domains\Reimbursement\Models\ExpenseCategory;
 use App\Domains\Reimbursement\Models\ReimbursementClaim;
 use App\Domains\Reimbursement\Repositories\ExpenseCategoryRepository;
@@ -84,6 +94,11 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->singleton(JobApplicationRepository::class, fn () => new JobApplicationRepository(new JobApplication));
         $this->app->singleton(InterviewRepository::class, fn () => new InterviewRepository(new Interview));
         $this->app->singleton(OnboardingRepository::class, fn () => new OnboardingRepository(new Onboarding));
+        $this->app->singleton(EmployeeTaxStatusRepository::class, fn () => new EmployeeTaxStatusRepository(new EmployeeTaxStatus));
+        $this->app->singleton(BpjsSettingRepository::class, fn () => new BpjsSettingRepository(new BpjsSetting));
+        $this->app->singleton(EmployeeBpjsOverrideRepository::class, fn () => new EmployeeBpjsOverrideRepository(new EmployeeBpjsOverride));
+        $this->app->singleton(Pph21SettingRepository::class, fn () => new Pph21SettingRepository(new Pph21Setting));
+        $this->app->singleton(PayrollRunDetailRepository::class, fn () => new PayrollRunDetailRepository(new PayrollRunDetail));
     }
 
     public function boot(): void

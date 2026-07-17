@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             AttendanceSeeder::class,
             SettingSeeder::class,
             PayrollComponentSeeder::class,
+            PayrollTaxSeeder::class,
             ExpenseCategorySeeder::class,
             ShiftSeeder::class,
             KpiSeeder::class,

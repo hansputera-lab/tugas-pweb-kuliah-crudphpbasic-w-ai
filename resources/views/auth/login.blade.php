@@ -4,9 +4,15 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>{{ config('app.name', 'HRIS') }} - Sign In</title>
+        <title>{{ config('app.name') }} - Sign In</title>
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+        @php $favicon = \App\Domains\Settings\Models\Setting::where('key', 'favicon')->value('value'); @endphp
+        @if($favicon)
+            <link rel="icon" type="image/x-icon" href="{{ \Illuminate\Support\Facades\Storage::url($favicon) }}">
+        @else
+            <link rel="icon" href="{{ asset('favicon.ico') }}">
+        @endif
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <style>
             body { font-family: 'Inter', sans-serif; }
@@ -23,12 +29,10 @@
                 <div class="relative z-10 flex flex-col justify-center px-16 text-white">
                     <div class="mb-8">
                         <div class="flex items-center mb-6">
-                            <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-4">
-                                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
+                            <div class="flex items-center justify-center mr-4">
+                                <x-company-logo size="lg" class="h-10 w-auto brightness-0 invert" />
                             </div>
-                            <span class="text-2xl font-bold tracking-tight">{{ config('app.name', 'HRIS') }}</span>
+                            <span class="text-2xl font-bold tracking-tight">{{ config('app.name') }}</span>
                         </div>
                         <h1 class="text-4xl font-bold leading-tight mb-4">
                             Human Resource<br>Information System
@@ -63,12 +67,8 @@
                 <div class="w-full max-w-md">
                     {{-- Mobile Logo --}}
                     <div class="lg:hidden flex items-center mb-8">
-                        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center mr-3">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                        </div>
-                        <span class="text-xl font-bold text-gray-900">{{ config('app.name', 'HRIS') }}</span>
+                        <x-company-logo class="h-9 w-auto mr-3" />
+                        <span class="text-xl font-bold text-gray-900">{{ config('app.name') }}</span>
                     </div>
 
                     <div>

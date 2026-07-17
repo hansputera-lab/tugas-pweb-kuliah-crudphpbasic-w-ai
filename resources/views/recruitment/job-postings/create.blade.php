@@ -25,7 +25,7 @@
                     <input type="text" name="title" id="title" value="{{ old('title') }}"
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                            placeholder="e.g. Senior Software Engineer"
-                           required>
+                           required maxlength="200">
                     @error('title') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
 
@@ -56,20 +56,20 @@
 
                 <div>
                     <label for="employment_type" class="block text-sm font-medium text-gray-700">Employment Type</label>
-                    <select name="employment_type" id="employment_type"
+                    <select name="employment_type" id="employment_type" required
                             class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                         <option value="">Select Type</option>
-                        <option value="Full Time" {{ old('employment_type') === 'Full Time' ? 'selected' : '' }}>Full Time</option>
-                        <option value="Part Time" {{ old('employment_type') === 'Part Time' ? 'selected' : '' }}>Part Time</option>
-                        <option value="Contract" {{ old('employment_type') === 'Contract' ? 'selected' : '' }}>Contract</option>
-                        <option value="Internship" {{ old('employment_type') === 'Internship' ? 'selected' : '' }}>Internship</option>
+                        <option value="full_time" {{ old('employment_type') === 'full_time' ? 'selected' : '' }}>Full Time</option>
+                        <option value="part_time" {{ old('employment_type') === 'part_time' ? 'selected' : '' }}>Part Time</option>
+                        <option value="contract" {{ old('employment_type') === 'contract' ? 'selected' : '' }}>Contract</option>
+                        <option value="internship" {{ old('employment_type') === 'internship' ? 'selected' : '' }}>Internship</option>
                     </select>
                     @error('employment_type') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
                     <label for="salary_min" class="block text-sm font-medium text-gray-700">Salary Min</label>
-                    <input type="number" name="salary_min" id="salary_min" value="{{ old('salary_min') }}"
+                    <input type="text" name="salary_min" id="salary_min" value="{{ old('salary_min') }}" data-currency
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                            placeholder="0">
                     @error('salary_min') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -77,7 +77,7 @@
 
                 <div>
                     <label for="salary_max" class="block text-sm font-medium text-gray-700">Salary Max</label>
-                    <input type="number" name="salary_max" id="salary_max" value="{{ old('salary_max') }}"
+                    <input type="text" name="salary_max" id="salary_max" value="{{ old('salary_max') }}" data-currency
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                            placeholder="0">
                     @error('salary_max') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -85,7 +85,7 @@
 
                 <div>
                     <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                    <select name="status" id="status"
+                    <select name="status" id="status" required
                             class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                         <option value="draft" {{ old('status') === 'draft' ? 'selected' : '' }}>Draft</option>
                         <option value="open" {{ old('status') === 'open' ? 'selected' : '' }}>Open</option>

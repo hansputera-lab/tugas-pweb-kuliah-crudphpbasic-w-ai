@@ -24,7 +24,9 @@
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Time</th>
                             <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Hours</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reason</th>
                             <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Notes</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 bg-white">
@@ -33,6 +35,7 @@
                                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ $ot->date->format('d M Y') }}</td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ substr($ot->start_time,0,5) }}-{{ substr($ot->end_time,0,5) }}</td>
                                 <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900">{{ number_format($ot->hours, 1) }}</td>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-600 max-w-[200px] truncate">{{ $ot->reason ?? '-' }}</td>
                                 <td class="whitespace-nowrap px-6 py-4 text-center">
                                     <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
                                         {{ $ot->status === 'approved' ? 'bg-green-100 text-green-800' : '' }}
@@ -41,10 +44,19 @@
                                         {{ ucfirst($ot->status) }}
                                     </span>
                                 </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 max-w-[200px] truncate">
+                                    @if($ot->status === 'rejected' && $ot->rejection_reason)
+                                        <span class="text-red-600" title="Rejection reason: {{ $ot->rejection_reason }}">Rejected: {{ $ot->rejection_reason }}</span>
+                                    @elseif($ot->status === 'approved' && $ot->approval_notes)
+                                        <span class="text-green-600">{{ $ot->approval_notes }}</span>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-6 py-12 text-center text-sm text-gray-500">You have no overtime requests yet.</td>
+                                <td colspan="6" class="px-6 py-12 text-center text-sm text-gray-500">You have no overtime requests yet.</td>
                             </tr>
                         @endforelse
                     </tbody>

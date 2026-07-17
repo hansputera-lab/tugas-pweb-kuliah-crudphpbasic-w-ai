@@ -9,7 +9,7 @@ $position = $position ?? null;
         <input type="text" name="code" id="code" value="{{ old('code', $position->code ?? '') }}"
                class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                placeholder="e.g. MGR, ENG, ADM"
-               required>
+               required maxlength="20">
         @error('code') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>
 
@@ -19,7 +19,7 @@ $position = $position ?? null;
         <input type="text" name="name" id="name" value="{{ old('name', $position->name ?? '') }}"
                class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                placeholder="e.g. Manager, Engineer"
-               required>
+               required maxlength="100">
         @error('name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>
 
@@ -40,10 +40,10 @@ $position = $position ?? null;
     {{-- Base Salary --}}
     <div>
         <label for="base_salary" class="block text-sm font-medium text-gray-700">Base Salary (IDR)</label>
-        <input type="number" name="base_salary" id="base_salary" value="{{ old('base_salary', $position->base_salary ?? '') }}"
+        <input type="text" name="base_salary" id="base_salary" value="{{ old('base_salary', $position->base_salary ?? '') }}"
                class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-               placeholder="e.g. 5000000"
-               min="0"
+               placeholder="e.g. 5.000.000"
+               data-currency
                required>
         @error('base_salary') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>

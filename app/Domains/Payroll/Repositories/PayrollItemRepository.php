@@ -29,8 +29,9 @@ class PayrollItemRepository
 
     public function findByEmployee(int $employeeId): Collection
     {
-        return $this->model->with(['period'])
+        return $this->model->with(['period', 'payslip'])
             ->where('employee_id', $employeeId)
+            ->where('status', '!=', 'draft')
             ->orderByDesc('payroll_period_id')
             ->get();
     }

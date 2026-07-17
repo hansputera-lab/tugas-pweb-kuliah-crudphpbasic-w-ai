@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EmployeeController;
@@ -13,6 +14,10 @@ use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\PerformanceController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\Admin\Payroll\BpjsSettingController;
+use App\Http\Controllers\Admin\Payroll\Pph21SettingController;
+use App\Http\Controllers\Admin\Payroll\EmployeeTaxStatusController;
+use App\Http\Controllers\Admin\Payroll\PayrollRunController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -115,6 +120,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/payroll/documents/{document}', [PayrollController::class, 'deleteDocument'])->name('payroll.documents.destroy')->where('document', '[0-9]+');
     });
 
+    // === PAYROLL & TAX ROUTES ===
+    Route::middleware('permission:bpjs.view,bpjs.manage,bpjs.configure')->group(function () {
+        Route::get('/payroll/bpjs', [BpjsSettingController::class, 'index'])->name('payroll.bpjs.settings');
+        Route::put('/payroll/bpjs/{component}', [BpjsSettingController::class, 'update'])->name('payroll.bpjs.update');
+    });
+
+    Route::middleware('permission:pph21.view,pph21.manage,pph21.configure')->group(function () {
+        Route::get('/payroll/pph21', [Pph21SettingController::class, 'index'])->name('payroll.pph21.settings');
+        Route::put('/payroll/pph21', [Pph21SettingController::class, 'update'])->name('payroll.pph21.update');
+    });
+
+    Route::middleware('permission:pph21.view,pph21.manage')->group(function () {
+        Route::get('/payroll/tax-status', [EmployeeTaxStatusController::class, 'index'])->name('payroll.tax-status.index');
+        Route::get('/payroll/tax-status/create', [EmployeeTaxStatusController::class, 'create'])->name('payroll.tax-status.create');
+        Route::post('/payroll/tax-status', [EmployeeTaxStatusController::class, 'store'])->name('payroll.tax-status.store');
+        Route::get('/payroll/tax-status/{taxStatus}/edit', [EmployeeTaxStatusController::class, 'edit'])->name('payroll.tax-status.edit');
+        Route::put('/payroll/tax-status/{taxStatus}', [EmployeeTaxStatusController::class, 'update'])->name('payroll.tax-status.update');
+    });
+
+    Route::middleware('permission:payroll.preview,payroll.run,payroll.calculate')->group(function () {
+        Route::get('/payroll/run', [PayrollRunController::class, 'index'])->name('payroll.run.index');
+        Route::get('/payroll/run/preview', [PayrollRunController::class, 'preview'])->name('payroll.run.preview');
+        Route::post('/payroll/run/execute', [PayrollRunController::class, 'run'])->name('payroll.run.execute');
+    });
+
     // Reimbursement management
     Route::middleware('permission:view_reimbursement,approve_reimbursement')->group(function () {
         Route::get('/reimbursements', [ReimbursementController::class, 'index'])->name('reimbursements.index');
@@ -168,10 +198,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
+    // Audit Log
+    Route::middleware('permission:view_audit_log')->group(function () {
+        Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+    });
+
     // Settings
     Route::middleware('permission:manage_settings')->group(function () {
         Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
+        Route::delete('/settings/logo/{type}', [SettingController::class, 'removeLogo'])->name('settings.logo.remove');
     });
 
     // Recruitment

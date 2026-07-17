@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 class EmployeeRequest extends FormRequest
@@ -13,12 +14,16 @@ class EmployeeRequest extends FormRequest
 
     public function rules(): array
     {
-        $employeeId = $this->route('employee')?->id;
+        $employeeId = $this->route('employee');
+
+        $user = $employeeId
+            ? User::whereHas('employee', fn($q) => $q->where('id', $employeeId))->first()
+            : null;
 
         return [
             'nip' => ['required', 'string', 'max:20', 'unique:employees,nip,' . $employeeId],
             'full_name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . optional(optional($this->route('employee'))->user)->id],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . optional($user)->id],
             'gender' => ['required', 'in:L,P'],
             'date_of_birth' => ['required', 'date', 'before:today'],
             'phone' => ['nullable', 'string', 'max:20'],

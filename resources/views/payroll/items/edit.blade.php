@@ -24,54 +24,54 @@
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Base Salary</label>
-                    <input type="number" step="0.01" name="base_salary" value="{{ old('base_salary', $item->base_salary) }}"
+                    <input type="text" name="base_salary" value="{{ old('base_salary', $item->base_salary) }}" data-currency
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" required>
                     <p class="mt-0.5 text-xs text-gray-400 tabular-nums">≈ {{ currency($item->base_salary) }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Overtime Hours</label>
-                    <input type="number" step="0.01" name="overtime_hours" value="{{ old('overtime_hours', $item->overtime_hours) }}"
+                    <input type="number" step="0.01" name="overtime_hours" value="{{ old('overtime_hours', $item->overtime_hours) }}" min="0"
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Transport Allowance</label>
-                    <input type="number" step="0.01" name="allowance_transport" value="{{ old('allowance_transport', $item->allowance_transport) }}"
+                    <input type="text" name="allowance_transport" value="{{ old('allowance_transport', $item->allowance_transport) }}" data-currency
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                     <p class="mt-0.5 text-xs text-gray-400 tabular-nums">≈ {{ currency($item->allowance_transport) }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Meal Allowance</label>
-                    <input type="number" step="0.01" name="allowance_meal" value="{{ old('allowance_meal', $item->allowance_meal) }}"
+                    <input type="text" name="allowance_meal" value="{{ old('allowance_meal', $item->allowance_meal) }}" data-currency
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                     <p class="mt-0.5 text-xs text-gray-400 tabular-nums">≈ {{ currency($item->allowance_meal) }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Other Allowance</label>
-                    <input type="number" step="0.01" name="allowance_other" value="{{ old('allowance_other', $item->allowance_other) }}"
+                    <input type="text" name="allowance_other" value="{{ old('allowance_other', $item->allowance_other) }}" data-currency
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                     <p class="mt-0.5 text-xs text-gray-400 tabular-nums">≈ {{ currency($item->allowance_other) }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Late Deduction</label>
-                    <input type="number" step="0.01" name="deduction_late" value="{{ old('deduction_late', $item->deduction_late) }}"
+                    <input type="text" name="deduction_late" value="{{ old('deduction_late', $item->deduction_late) }}" data-currency
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                     <p class="mt-0.5 text-xs text-gray-400 tabular-nums">≈ {{ currency($item->deduction_late) }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Absent Deduction</label>
-                    <input type="number" step="0.01" name="deduction_absent" value="{{ old('deduction_absent', $item->deduction_absent) }}"
+                    <input type="text" name="deduction_absent" value="{{ old('deduction_absent', $item->deduction_absent) }}" data-currency
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                     <p class="mt-0.5 text-xs text-gray-400 tabular-nums">≈ {{ currency($item->deduction_absent) }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Other Deduction</label>
-                    <input type="number" step="0.01" name="deduction_other" value="{{ old('deduction_other', $item->deduction_other) }}"
+                    <input type="text" name="deduction_other" value="{{ old('deduction_other', $item->deduction_other) }}" data-currency
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                     <p class="mt-0.5 text-xs text-gray-400 tabular-nums">≈ {{ currency($item->deduction_other) }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Overtime Pay</label>
-                    <input type="number" step="0.01" name="overtime_pay" value="{{ old('overtime_pay', $item->overtime_pay) }}"
+                    <input type="text" name="overtime_pay" value="{{ old('overtime_pay', $item->overtime_pay) }}" data-currency
                            class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                     <p class="mt-0.5 text-xs text-gray-400 tabular-nums">≈ {{ currency($item->overtime_pay) }}</p>
                 </div>
@@ -79,7 +79,7 @@
 
             <div class="mt-5">
                 <label class="block text-sm font-medium text-gray-700">Notes</label>
-                <textarea name="notes" rows="3" class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">{{ old('notes', $item->notes) }}</textarea>
+                <textarea name="notes" rows="3" maxlength="1000" class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">{{ old('notes', $item->notes) }}</textarea>
             </div>
 
             <div class="mt-6 flex items-center justify-end gap-3 border-t border-gray-100 pt-4">

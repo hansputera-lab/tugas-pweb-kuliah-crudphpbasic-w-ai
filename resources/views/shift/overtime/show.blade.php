@@ -26,6 +26,9 @@
                 @if($request->rejection_reason)
                     <div class="col-span-2"><dt class="text-gray-500">Rejection Reason</dt><dd class="font-medium text-red-600">{{ $request->rejection_reason }}</dd></div>
                 @endif
+                @if($request->approval_notes)
+                    <div class="col-span-2"><dt class="text-gray-500">Approval Notes</dt><dd class="font-medium text-green-600">{{ $request->approval_notes }}</dd></div>
+                @endif
                 <div class="col-span-2">
                     <dt class="text-gray-500">Status</dt>
                     <dd>

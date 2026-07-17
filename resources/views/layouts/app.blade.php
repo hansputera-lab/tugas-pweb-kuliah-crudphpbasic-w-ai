@@ -5,10 +5,17 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'HRIS') }}</title>
+        <title>{{ config('app.name') }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
+        @php $favicon = \App\Domains\Settings\Models\Setting::where('key', 'favicon')->value('value'); @endphp
+        @if($favicon)
+            <link rel="icon" type="image/x-icon" href="{{ \Illuminate\Support\Facades\Storage::url($favicon) }}">
+        @else
+            <link rel="icon" href="{{ asset('favicon.ico') }}">
+        @endif
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -19,8 +26,9 @@
             {{-- Desktop Sidebar --}}
             <aside class="hidden md:flex md:flex-col md:fixed md:inset-y-0 md:w-64 bg-white border-r border-gray-200">
                 <div class="flex items-center h-16 flex-shrink-0 px-6 border-b border-gray-200">
-                    <a href="{{ route('dashboard') }}" class="text-xl font-bold text-indigo-600">
-                        {{ config('app.name', 'HRIS') }}
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2 text-xl font-bold text-indigo-600">
+                        <x-company-logo size="sm" class="h-8 w-auto" />
+                        <span>{{ config('app.name') }}</span>
                     </a>
                 </div>
                 <div class="flex-1 overflow-y-auto py-4 px-3 space-y-6">
@@ -33,7 +41,10 @@
                 <div x-show="sidebarOpen" x-transition.opacity class="absolute inset-0 bg-gray-600 bg-opacity-50" @click="sidebarOpen = false"></div>
                 <aside x-show="sidebarOpen" x-transition:enter="transition ease-in-out duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in-out duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="relative flex flex-col w-64 max-w-xs h-full bg-white">
                     <div class="flex items-center justify-between h-16 flex-shrink-0 px-6 border-b border-gray-200">
-                        <a href="{{ route('dashboard') }}" class="text-xl font-bold text-indigo-600">{{ config('app.name', 'HRIS') }}</a>
+                        <a href="{{ route('dashboard') }}" class="flex items-center gap-2 text-xl font-bold text-indigo-600">
+                            <x-company-logo size="sm" class="h-8 w-auto" />
+                            <span>{{ config('app.name') }}</span>
+                        </a>
                         <button @click="sidebarOpen = false" class="text-gray-400 hover:text-gray-500">
                             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>

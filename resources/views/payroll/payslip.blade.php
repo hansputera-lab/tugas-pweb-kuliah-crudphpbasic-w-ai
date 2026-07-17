@@ -11,7 +11,7 @@
         <div class="rounded-xl bg-white p-8 shadow-sm ring-1 ring-gray-950/5" id="payslip">
             <div class="flex items-center justify-between border-b border-gray-200 pb-6">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">{{ config('app.name', 'HRIS') }}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">{{ config('app.name') }}</h1>
                     <p class="text-sm text-gray-500">Payslip / Slip Gaji</p>
                 </div>
                 <div class="text-right">
@@ -69,7 +69,7 @@
                 <span class="text-xl font-bold text-indigo-900 tabular-nums">{{ currency($item->net_salary) }}</span>
             </div>
 
-            <p class="mt-8 text-center text-xs text-gray-400">This payslip is generated automatically by the HRIS system.</p>
+            <p class="mt-8 text-center text-xs text-gray-400">This payslip is generated automatically by the {{ config('app.name') }} system.</p>
         </div>
     </div>
 </div>

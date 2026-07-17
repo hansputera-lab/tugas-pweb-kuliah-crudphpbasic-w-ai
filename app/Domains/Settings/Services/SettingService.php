@@ -42,4 +42,16 @@ class SettingService
     {
         return $this->settingRepo->getGracePeriodMinutes();
     }
+
+    public function getCompanyName(): string
+    {
+        return $this->get('company_name', 'HRIS System');
+    }
+
+    public function getLogoUrl(string $type = 'light'): ?string
+    {
+        $path = $this->get("logo_{$type}");
+        if (!$path) return null;
+        return \Illuminate\Support\Facades\Storage::url($path);
+    }
 }
