@@ -60,30 +60,25 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 
 ## Deployment Guide
 
-The recommended way to deploy HRIS is using the automated installers in the [`installers/`](installers/) directory:
+The recommended way to deploy HRIS is using the automated installers below.
 
-| Platform | Installer | Description |
-|----------|-----------|-------------|
-| **Windows** | Download `HRIS-Setup.exe` from the [Releases page](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases) | GUI wizard; bundles portable Apache + PHP 8.2 + MariaDB 10.4; auto-generates DB credentials; installs services & Start Menu shortcuts |
-| **Linux** | `installers/linux/install.sh` | Multi-distro bash script (Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE); detects package manager & existing web server; runs `--nginx` or `--apache` |
+**Windows** — Download the pre-built `HRIS-Setup.exe` from the [Releases page](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases). The source for building it yourself is in [`installers/windows/`](installers/windows/).
 
-### Quick Start
-
-**Windows** — Run `HRIS-Setup.exe`, pick a directory, click through the wizard. The installer handles everything: database creation, `.env` setup, migrations, seeding.
-
-**Linux** — One-liner for Nginx:
+**Linux** — Run the installer directly from GitHub (no download needed):
 
 ```bash
-bash installers/linux/install.sh --nginx
+# Install with Nginx (one command, zero manual steps)
+curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash -s -- --nginx
+
+# Or with Apache
+curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash -s -- --apache
+
+# Or run interactively (prompts for web server choice)
+curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash
 ```
 
-Or interactive (prompts for web server choice):
-
-```bash
-bash installers/linux/install.sh
-```
-
-See `installers/linux/README.md` for environment variables, uninstall instructions, and distro support details.
+Supports Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE.  
+See `installers/linux/README.md` for environment variables, uninstall, and distro details.
 
 ---
 
@@ -104,30 +99,25 @@ This creates all tables, permissions, roles, and seed data in one go.
 
 ## Panduan Deployment (Bahasa Indonesia)
 
-Cara termudah untuk menjalankan HRIS adalah menggunakan installer otomatis di folder [`installers/`](installers/):
+Cara termudah untuk menjalankan HRIS adalah menggunakan installer otomatis di bawah ini.
 
-| Platform | Installer | Keterangan |
-|----------|-----------|------------|
-| **Windows** | Unduh `HRIS-Setup.exe` dari [halaman Releases](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases) | Wizard GUI; menyertakan Apache + PHP 8.2 + MariaDB 10.4 portable; generate kredensial database otomatis; memasang service & shortcut Start Menu |
-| **Linux** | `installers/linux/install.sh` | Script bash multi-distro (Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE); mendeteksi package manager & web server yang sudah terpasang; opsi `--nginx` atau `--apache` |
+**Windows** — Unduh `HRIS-Setup.exe` dari [halaman Releases](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases). Source code untuk membangun sendiri ada di [`installers/windows/`](installers/windows/).
 
-### Mulai Cepat
-
-**Windows** — Jalankan `HRIS-Setup.exe`, pilih direktori, ikuti wizard. Installer menangani semuanya: pembuatan database, konfigurasi `.env`, migrasi, dan seeding.
-
-**Linux** — Satu baris perintah untuk Nginx:
+**Linux** — Jalankan langsung dari GitHub (tanpa download repo):
 
 ```bash
-bash installers/linux/install.sh --nginx
+# Install dengan Nginx (satu perintah, tanpa langkah manual)
+curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash -s -- --nginx
+
+# Atau dengan Apache
+curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash -s -- --apache
+
+# Atau interaktif (pilih web server)
+curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash
 ```
 
-Atau interaktif (pilih web server):
-
-```bash
-bash installers/linux/install.sh
-```
-
-Lihat `installers/linux/README.md` untuk variabel lingkungan, petunjuk uninstall, dan dukungan distribusi.
+Mendukung Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE.  
+Lihat `installers/linux/README.md` untuk variabel lingkungan, uninstall, dan detail distribusi.
 
 ---
 
