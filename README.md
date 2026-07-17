@@ -12,6 +12,8 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 - **Leave Management** — Request → Approve/Reject workflow, balance tracking, multiple leave types
 - **Recruitment** — Job postings → Candidate applications → Screening → Interviews → Offer → Onboarding workflow
 - **Payroll** — Auto-calculated salary from attendance (late/absent deductions + overtime), manual component override, period finalize/pay, printable HTML payslips, **payroll document attachments** per payslip line item
+- **BPJS Calculation** — Automatic BPJS Kesehatan, Ketenagakerjaan (JKK, JKM, JHT, JP) contribution calculation with configurable rates per component, wage caps, and risk-level-based JKK rates
+- **PPh 21 Calculation** — Automatic income tax calculation using TER (Tarif Efektif Rata-rata) method per PMK 168/2023, with Pasal 17 progressive tax true-up at year-end, configurable PTKP thresholds, tax brackets, biaya jabatan, and DTP support
 - **Reimbursement** — Employee expense claims with receipt upload and configurable multi-level approval (per category)
 - **Shift & Overtime** — Shift definitions, employee shift assignment, calendar-style schedule, overtime requests that flow into payroll
 - **Performance / KPI** — Weighted KPI appraisals with A/B/C/D/E grading and 360° feedback (grade thresholds admin-configurable)
