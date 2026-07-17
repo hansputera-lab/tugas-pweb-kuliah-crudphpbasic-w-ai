@@ -33,7 +33,7 @@ bash install.sh --help             # Show help
 
 ```bash
 # Install with Nginx, pull from your fork
-HRIS_REPO=https://github.com/your-org/hris.git \
+HRIS_REPO=https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai.git \
 HRIS_DOMAIN=hris.example.com \
     bash install.sh --nginx
 ```

@@ -87,7 +87,7 @@ See `installers/linux/README.md` for environment variables, uninstall instructio
 
 ---
 
-> **Manual / Docker setup:** If you prefer to set up by hand or use Laravel Sail, refer to the manual steps in the [v1.0.0 tag](https://github.com/your-org/hris/tree/v1.0.0) or the original [project template](https://github.com/laravel/laravel).
+> **Manual / Docker setup:** If you prefer to set up by hand or use Laravel Sail, refer to the manual steps in the [v1.0.0 tag](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai) or the original [project template](https://github.com/laravel/laravel).
 
 ## Alternative: Import SQL Dump (skip migration)
 
@@ -131,7 +131,7 @@ Lihat `installers/linux/README.md` untuk variabel lingkungan, petunjuk uninstall
 
 ---
 
-> **Setup manual / Docker:** Jika ingin melakukan instalasi manual atau menggunakan Laravel Sail, lihat langkah-langkah di [tag v1.0.0](https://github.com/your-org/hris/tree/v1.0.0) atau [project template asli](https://github.com/laravel/laravel).
+> **Setup manual / Docker:** Jika ingin melakukan instalasi manual atau menggunakan Laravel Sail, lihat langkah-langkah di [tag v1.0.0](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai) atau [project template asli](https://github.com/laravel/laravel).
 
 ## Alternatif: Import SQL Dump (lewati migrasi)
 
