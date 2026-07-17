@@ -23,6 +23,7 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 - **Admin Config** — Working hours, grace period, company name, payroll defaults, KPI thresholds (all configurable via UI)
 - **Currency Input Formatting** — All monetary input fields auto-format with `toLocaleString('id-ID')` as you type (formatted decimals on blur, raw numbers on focus for editing, auto-stripped on submit)
 - **Frontend Form Validation** — All forms validate before submission using HTML5 constraints + custom JS: required fields, email format, min/max ranges, maxlength, radio groups; inline red error messages with styled borders; currency inputs unformatted before validation then reformatted on failure
+- **Cross-platform Installers** — Windows GUI installer (bundles portable Apache + PHP + MariaDB, click-click setup) and Linux multi-distro bash installer (supports Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE)
 
 ## Tech Stack
 
@@ -58,6 +59,8 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 ---
 
 ## Deployment Guide
+
+> **Quick install:** See the `installers/` folder for a Windows GUI installer (`.exe`) and a Linux multi-distro bash script that handle all dependencies automatically.
 
 ### Option 1: Docker (Laravel Sail)
 
@@ -335,6 +338,10 @@ sudo certbot --apache -d your-domain.com
 ```
 
 ---
+
+> **Automated installers:** Prefer a hands-off setup? See [installers/](installers/) for:
+> - **Windows:** GUI `.exe` installer (bundles Apache + PHP + MariaDB, click-click)
+> - **Linux:** Multi-distro bash script (`install.sh`) supporting Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE
 
 ## Alternative: Import SQL Dump (skip migration)
 
