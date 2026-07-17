@@ -1,5 +1,9 @@
 # Windows Installer — Building the .exe
 
+The easiest way is to download the pre-built `HRIS-Setup.exe` from the [Releases page](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases).
+
+To build it yourself, follow the steps below.
+
 ## Prerequisites
 
 1. **Inno Setup 6.x** — Download from https://jrsoftware.org/isinfo.php

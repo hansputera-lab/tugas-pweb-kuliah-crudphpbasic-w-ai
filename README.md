@@ -64,7 +64,7 @@ The recommended way to deploy HRIS is using the automated installers in the [`in
 
 | Platform | Installer | Description |
 |----------|-----------|-------------|
-| **Windows** | `installers/windows/hris-installer.iss` → builds `HRIS-Setup.exe` | GUI wizard; bundles portable Apache + PHP 8.2 + MariaDB 10.4; auto-generates DB credentials; installs services & Start Menu shortcuts |
+| **Windows** | Download `HRIS-Setup.exe` from the [Releases page](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases) | GUI wizard; bundles portable Apache + PHP 8.2 + MariaDB 10.4; auto-generates DB credentials; installs services & Start Menu shortcuts |
 | **Linux** | `installers/linux/install.sh` | Multi-distro bash script (Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE); detects package manager & existing web server; runs `--nginx` or `--apache` |
 
 ### Quick Start
@@ -108,7 +108,7 @@ Cara termudah untuk menjalankan HRIS adalah menggunakan installer otomatis di fo
 
 | Platform | Installer | Keterangan |
 |----------|-----------|------------|
-| **Windows** | `installers/windows/hris-installer.iss` → `HRIS-Setup.exe` | Wizard GUI; menyertakan Apache + PHP 8.2 + MariaDB 10.4 portable; generate kredensial database otomatis; memasang service & shortcut Start Menu |
+| **Windows** | Unduh `HRIS-Setup.exe` dari [halaman Releases](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases) | Wizard GUI; menyertakan Apache + PHP 8.2 + MariaDB 10.4 portable; generate kredensial database otomatis; memasang service & shortcut Start Menu |
 | **Linux** | `installers/linux/install.sh` | Script bash multi-distro (Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE); mendeteksi package manager & web server yang sudah terpasang; opsi `--nginx` atau `--apache` |
 
 ### Mulai Cepat
