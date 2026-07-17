@@ -60,288 +60,34 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 
 ## Deployment Guide
 
-> **Quick install:** See the `installers/` folder for a Windows GUI installer (`.exe`) and a Linux multi-distro bash script that handle all dependencies automatically.
+The recommended way to deploy HRIS is using the automated installers in the [`installers/`](installers/) directory:
 
-### Option 1: Docker (Laravel Sail)
+| Platform | Installer | Description |
+|----------|-----------|-------------|
+| **Windows** | `installers/windows/hris-installer.iss` → builds `HRIS-Setup.exe` | GUI wizard; bundles portable Apache + PHP 8.2 + MariaDB 10.4; auto-generates DB credentials; installs services & Start Menu shortcuts |
+| **Linux** | `installers/linux/install.sh` | Multi-distro bash script (Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE); detects package manager & existing web server; runs `--nginx` or `--apache` |
 
-This uses the included Laravel Sail Docker setup.
+### Quick Start
+
+**Windows** — Run `HRIS-Setup.exe`, pick a directory, click through the wizard. The installer handles everything: database creation, `.env` setup, migrations, seeding.
+
+**Linux** — One-liner for Nginx:
 
 ```bash
-# 1. Clone the repository
-git clone <repository-url> hris
-cd hris
-
-# 2. Configure environment
-cp .env.example .env
-# Edit .env:
-#   DB_CONNECTION=mysql
-#   DB_HOST=mysql
-#   DB_PORT=3306
-#   DB_DATABASE=hris
-#   DB_USERNAME=sail
-#   DB_PASSWORD=password
-#   APP_URL=http://localhost
-
-# 3. Install PHP dependencies
-docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/var/www/html" \
-    -w /var/www/html \
-    composer:latest composer install --ignore-platform-reqs
-
-# 4. Install Node dependencies & build assets
-docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/var/www/html" \
-    -w /var/www/html \
-    node:22 npm install && npm run build
-
-# 5. Generate app key
-php artisan key:generate
-
-# 6. Start Sail containers
-./vendor/bin/sail up -d
-
-# 7. Create database & run migrations
-./vendor/bin/sail artisan migrate --seed
-
-# 8. Create storage symlink
-./vendor/bin/sail artisan storage:link
-
-# 9. Open in browser
-# http://localhost
+bash installers/linux/install.sh --nginx
 ```
 
-To stop: `./vendor/bin/sail down`
+Or interactive (prompts for web server choice):
+
+```bash
+bash installers/linux/install.sh
+```
+
+See `installers/linux/README.md` for environment variables, uninstall instructions, and distro support details.
 
 ---
 
-### Option 2: Windows (XAMPP)
-
-```bash
-# 1. Start XAMPP
-# Open XAMPP Control Panel → Start Apache & MySQL
-
-# 2. Clone to htdocs
-cd C:\xampp\htdocs
-git clone <repository-url> hris
-cd hris
-
-# 3. Install PHP dependencies
-composer install
-
-# 4. Install Node dependencies & build assets
-npm install
-npm run build
-
-# 5. Configure environment
-copy .env.example .env
-# Edit .env with Notepad:
-#   DB_CONNECTION=mysql
-#   DB_HOST=127.0.0.1
-#   DB_PORT=3306
-#   DB_DATABASE=hris
-#   DB_USERNAME=root
-#   DB_PASSWORD=         (leave empty for XAMPP default)
-#   APP_URL=http://localhost/hris/public
-#   ASSET_URL=http://localhost/hris/public
-
-# 6. Generate app key
-php artisan key:generate
-
-# 7. Create database
-# Open phpMyAdmin (http://localhost/phpmyadmin)
-# → New → Database name: hris → utf8mb4_unicode_ci → Create
-
-# 8. Run migrations & seed
-php artisan migrate --seed
-
-# 9. Create storage symlink (run PowerShell as Admin)
-php artisan storage:link
-
-# 10. Set permissions (PowerShell as Admin)
-icacls storage /grant "Everyone:(OI)(CI)M" /T
-icacls public/uploads /grant "Everyone:(OI)(CI)M" /T
-
-# 11. Serve the app
-php artisan serve
-# Or access via http://localhost/hris/public/public/index.php
-# (For proper URL rewriting, configure Apache virtual host)
-```
-
-**XAMPP Apache Virtual Host (optional but recommended):**
-
-Create `C:\xampp\apache\conf\extra\httpd-vhosts.conf` entry:
-
-```apache
-<VirtualHost *:80>
-    DocumentRoot "C:/xampp/htdocs/hris/public"
-    ServerName hris.local
-
-    <Directory "C:/xampp/htdocs/hris/public">
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-```
-
-Add to `C:\Windows\System32\drivers\etc\hosts`:
-```
-127.0.0.1 hris.local
-```
-
-Restart Apache → open http://hris.local
-
----
-
-### Option 3: Linux Native (Ubuntu/Debian)
-
-#### Using Nginx
-
-```bash
-# 1. Install required packages
-sudo apt update
-sudo apt install -y nginx php8.2-fpm php8.2-mysql php8.2-mbstring \
-    php8.2-xml php8.2-curl php8.2-bcmath php8.2-gd php8.2-zip \
-    php8.2-intl php8.2-cli composer mysql-server git
-
-# 2. Install Node.js (if not installed)
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# 3. Clone the project
-sudo mkdir -p /var/www
-sudo chown $USER:$USER /var/www
-git clone <repository-url> /var/www/hris
-cd /var/www/hris
-
-# 4. Install dependencies
-composer install
-npm install && npm run build
-
-# 5. Configure environment
-cp .env.example .env
-# Edit .env:
-#   DB_CONNECTION=mysql
-#   DB_HOST=127.0.0.1
-#   DB_PORT=3306
-#   DB_DATABASE=hris
-#   DB_USERNAME=root
-#   DB_PASSWORD=your_password
-#   APP_URL=https://your-domain.com
-
-# 6. Generate app key
-php artisan key:generate
-
-# 7. Configure MySQL
-sudo mysql -e "CREATE DATABASE IF NOT EXISTS hris CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'your_password'; FLUSH PRIVILEGES;"
-
-# 8. Run migrations & seed
-php artisan migrate --seed
-
-# 9. Create storage symlink
-php artisan storage:link
-
-# 10. Set proper permissions
-sudo chown -R www-data:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
-
-# 11. Configure Nginx
-sudo tee /etc/nginx/sites-available/hris << 'NGINX'
-server {
-    listen 80;
-    server_name your-domain.com;
-    root /var/www/hris/public;
-    index index.php;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        include fastcgi_params;
-    }
-
-    location ~ /\.(ht|git|env) {
-        deny all;
-    }
-
-    location ~ ^/(app|bootstrap|config|database|resources|routes|storage|tests|vendor)/ {
-        deny all;
-    }
-
-    location ~* \.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg|eot)$ {
-        expires 30d;
-        add_header Cache-Control "public, immutable";
-    }
-
-    location ~* /uploads/.*\.php$ {
-        deny all;
-    }
-
-    access_log /var/log/nginx/hris_access.log;
-    error_log /var/log/nginx/hris_error.log;
-}
-NGINX
-
-sudo ln -sf /etc/nginx/sites-available/hris /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl reload nginx
-
-# 12. (Optional) SSL with Let's Encrypt
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d your-domain.com
-
-# 13. Open in browser
-# http://your-domain.com or https://your-domain.com
-```
-
-#### Using Apache2
-
-```bash
-# 1. Install required packages (swap nginx for apache2)
-sudo apt update
-sudo apt install -y apache2 php8.2 php8.2-mysql php8.2-mbstring \
-    php8.2-xml php8.2-curl php8.2-bcmath php8.2-gd php8.2-zip \
-    php8.2-intl php8.2-cli libapache2-mod-php8.2 composer mysql-server git
-
-# 2-9. Same as Nginx steps 2-10 above
-
-# 10. Enable mod_rewrite
-sudo a2enmod rewrite
-
-# 11. Configure Apache virtual host
-sudo tee /etc/apache2/sites-available/hris.conf << 'APACHE'
-<VirtualHost *:80>
-    ServerName your-domain.com
-    DocumentRoot /var/www/hris/public
-
-    <Directory /var/www/hris/public>
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-
-    ErrorLog ${APACHE_LOG_DIR}/hris_error.log
-    CustomLog ${APACHE_LOG_DIR}/hris_access.log combined
-</VirtualHost>
-APACHE
-
-sudo a2dissite 000-default.conf
-sudo a2ensite hris.conf
-sudo apache2ctl configtest && sudo systemctl reload apache2
-
-# 12. (Optional) SSL with Let's Encrypt
-sudo apt install -y certbot python3-certbot-apache
-sudo certbot --apache -d your-domain.com
-```
-
----
-
-> **Automated installers:** Prefer a hands-off setup? See [installers/](installers/) for:
-> - **Windows:** GUI `.exe` installer (bundles Apache + PHP + MariaDB, click-click)
-> - **Linux:** Multi-distro bash script (`install.sh`) supporting Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE
+> **Manual / Docker setup:** If you prefer to set up by hand or use Laravel Sail, refer to the manual steps in the [v1.0.0 tag](https://github.com/your-org/hris/tree/v1.0.0) or the original [project template](https://github.com/laravel/laravel).
 
 ## Alternative: Import SQL Dump (skip migration)
 
@@ -358,282 +104,34 @@ This creates all tables, permissions, roles, and seed data in one go.
 
 ## Panduan Deployment (Bahasa Indonesia)
 
-### Opsi 1: Docker (Laravel Sail)
+Cara termudah untuk menjalankan HRIS adalah menggunakan installer otomatis di folder [`installers/`](installers/):
 
-Menggunakan Laravel Sail Docker yang sudah termasuk.
+| Platform | Installer | Keterangan |
+|----------|-----------|------------|
+| **Windows** | `installers/windows/hris-installer.iss` → `HRIS-Setup.exe` | Wizard GUI; menyertakan Apache + PHP 8.2 + MariaDB 10.4 portable; generate kredensial database otomatis; memasang service & shortcut Start Menu |
+| **Linux** | `installers/linux/install.sh` | Script bash multi-distro (Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE); mendeteksi package manager & web server yang sudah terpasang; opsi `--nginx` atau `--apache` |
+
+### Mulai Cepat
+
+**Windows** — Jalankan `HRIS-Setup.exe`, pilih direktori, ikuti wizard. Installer menangani semuanya: pembuatan database, konfigurasi `.env`, migrasi, dan seeding.
+
+**Linux** — Satu baris perintah untuk Nginx:
 
 ```bash
-# 1. Clone repositori
-git clone <repository-url> hris
-cd hris
-
-# 2. Konfigurasi environment
-cp .env.example .env
-# Edit .env:
-#   DB_CONNECTION=mysql
-#   DB_HOST=mysql
-#   DB_PORT=3306
-#   DB_DATABASE=hris
-#   DB_USERNAME=sail
-#   DB_PASSWORD=password
-#   APP_URL=http://localhost
-
-# 3. Install dependensi PHP
-docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/var/www/html" \
-    -w /var/www/html \
-    composer:latest composer install --ignore-platform-reqs
-
-# 4. Install Node dependencies & build assets
-docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/var/www/html" \
-    -w /var/www/html \
-    node:22 npm install && npm run build
-
-# 5. Generate app key
-php artisan key:generate
-
-# 6. Jalankan Sail containers
-./vendor/bin/sail up -d
-
-# 7. Buat database & jalankan migrasi
-./vendor/bin/sail artisan migrate --seed
-
-# 8. Buat storage symlink
-./vendor/bin/sail artisan storage:link
-
-# 9. Buka di browser
-# http://localhost
+bash installers/linux/install.sh --nginx
 ```
 
-Untuk menghentikan: `./vendor/bin/sail down`
+Atau interaktif (pilih web server):
+
+```bash
+bash installers/linux/install.sh
+```
+
+Lihat `installers/linux/README.md` untuk variabel lingkungan, petunjuk uninstall, dan dukungan distribusi.
 
 ---
 
-### Opsi 2: Windows (XAMPP)
-
-```bash
-# 1. Jalankan XAMPP
-# Buka XAMPP Control Panel → Start Apache & MySQL
-
-# 2. Clone ke htdocs
-cd C:\xampp\htdocs
-git clone <repository-url> hris
-cd hris
-
-# 3. Install dependensi PHP
-composer install
-
-# 4. Install Node dependencies & build assets
-npm install
-npm run build
-
-# 5. Konfigurasi environment
-copy .env.example .env
-# Edit .env dengan Notepad:
-#   DB_CONNECTION=mysql
-#   DB_HOST=127.0.0.1
-#   DB_PORT=3306
-#   DB_DATABASE=hris
-#   DB_USERNAME=root
-#   DB_PASSWORD=         (kosongkan untuk default XAMPP)
-#   APP_URL=http://localhost/hris/public
-#   ASSET_URL=http://localhost/hris/public
-
-# 6. Generate app key
-php artisan key:generate
-
-# 7. Buat database
-# Buka phpMyAdmin (http://localhost/phpmyadmin)
-# → New → Nama database: hris → utf8mb4_unicode_ci → Create
-
-# 8. Jalankan migrasi & seed
-php artisan migrate --seed
-
-# 9. Buat storage symlink (jalankan PowerShell sebagai Admin)
-php artisan storage:link
-
-# 10. Set permissions (PowerShell sebagai Admin)
-icacls storage /grant "Everyone:(OI)(CI)M" /T
-icacls public/uploads /grant "Everyone:(OI)(CI)M" /T
-
-# 11. Jalankan aplikasi
-php artisan serve
-# Atau akses via http://localhost/hris/public/public/index.php
-# (Untuk URL rewriting yang benar, konfigurasi Apache virtual host)
-```
-
-**XAMPP Apache Virtual Host (opsional tapi disarankan):**
-
-Buat entri di `C:\xampp\apache\conf\extra\httpd-vhosts.conf`:
-
-```apache
-<VirtualHost *:80>
-    DocumentRoot "C:/xampp/htdocs/hris/public"
-    ServerName hris.local
-
-    <Directory "C:/xampp/htdocs/hris/public">
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-```
-
-Tambahkan ke `C:\Windows\System32\drivers\etc\hosts`:
-```
-127.0.0.1 hris.local
-```
-
-Restart Apache → buka http://hris.local
-
----
-
-### Opsi 3: Linux Native (Ubuntu/Debian)
-
-#### Menggunakan Nginx
-
-```bash
-# 1. Install paket yang diperlukan
-sudo apt update
-sudo apt install -y nginx php8.2-fpm php8.2-mysql php8.2-mbstring \
-    php8.2-xml php8.2-curl php8.2-bcmath php8.2-gd php8.2-zip \
-    php8.2-intl php8.2-cli composer mysql-server git
-
-# 2. Install Node.js (jika belum terinstall)
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# 3. Clone proyek
-sudo mkdir -p /var/www
-sudo chown $USER:$USER /var/www
-git clone <repository-url> /var/www/hris
-cd /var/www/hris
-
-# 4. Install dependensi
-composer install
-npm install && npm run build
-
-# 5. Konfigurasi environment
-cp .env.example .env
-# Edit .env:
-#   DB_CONNECTION=mysql
-#   DB_HOST=127.0.0.1
-#   DB_PORT=3306
-#   DB_DATABASE=hris
-#   DB_USERNAME=root
-#   DB_PASSWORD=your_password
-#   APP_URL=https://your-domain.com
-
-# 6. Generate app key
-php artisan key:generate
-
-# 7. Konfigurasi MySQL
-sudo mysql -e "CREATE DATABASE IF NOT EXISTS hris CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'your_password'; FLUSH PRIVILEGES;"
-
-# 8. Jalankan migrasi & seed
-php artisan migrate --seed
-
-# 9. Buat storage symlink
-php artisan storage:link
-
-# 10. Set permission yang benar
-sudo chown -R www-data:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
-
-# 11. Konfigurasi Nginx
-sudo tee /etc/nginx/sites-available/hris << 'NGINX'
-server {
-    listen 80;
-    server_name your-domain.com;
-    root /var/www/hris/public;
-    index index.php;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        include fastcgi_params;
-    }
-
-    location ~ /\.(ht|git|env) {
-        deny all;
-    }
-
-    location ~ ^/(app|bootstrap|config|database|resources|routes|storage|tests|vendor)/ {
-        deny all;
-    }
-
-    location ~* \.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg|eot)$ {
-        expires 30d;
-        add_header Cache-Control "public, immutable";
-    }
-
-    location ~* /uploads/.*\.php$ {
-        deny all;
-    }
-
-    access_log /var/log/nginx/hris_access.log;
-    error_log /var/log/nginx/hris_error.log;
-}
-NGINX
-
-sudo ln -sf /etc/nginx/sites-available/hris /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl reload nginx
-
-# 12. (Opsional) SSL dengan Let's Encrypt
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d your-domain.com
-
-# 13. Buka di browser
-# http://your-domain.com atau https://your-domain.com
-```
-
-#### Menggunakan Apache2
-
-```bash
-# 1. Install paket yang diperlukan (ganti nginx dengan apache2)
-sudo apt update
-sudo apt install -y apache2 php8.2 php8.2-mysql php8.2-mbstring \
-    php8.2-xml php8.2-curl php8.2-bcmath php8.2-gd php8.2-zip \
-    php8.2-intl php8.2-cli libapache2-mod-php8.2 composer mysql-server git
-
-# 2-9. Sama seperti langkah Nginx 2-10 di atas
-
-# 10. Aktifkan mod_rewrite
-sudo a2enmod rewrite
-
-# 11. Konfigurasi Apache virtual host
-sudo tee /etc/apache2/sites-available/hris.conf << 'APACHE'
-<VirtualHost *:80>
-    ServerName your-domain.com
-    DocumentRoot /var/www/hris/public
-
-    <Directory /var/www/hris/public>
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-
-    ErrorLog ${APACHE_LOG_DIR}/hris_error.log
-    CustomLog ${APACHE_LOG_DIR}/hris_access.log combined
-</VirtualHost>
-APACHE
-
-sudo a2dissite 000-default.conf
-sudo a2ensite hris.conf
-sudo apache2ctl configtest && sudo systemctl reload apache2
-
-# 12. (Opsional) SSL dengan Let's Encrypt
-sudo apt install -y certbot python3-certbot-apache
-sudo certbot --apache -d your-domain.com
-```
-
----
+> **Setup manual / Docker:** Jika ingin melakukan instalasi manual atau menggunakan Laravel Sail, lihat langkah-langkah di [tag v1.0.0](https://github.com/your-org/hris/tree/v1.0.0) atau [project template asli](https://github.com/laravel/laravel).
 
 ## Alternatif: Import SQL Dump (lewati migrasi)
 
