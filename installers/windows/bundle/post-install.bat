@@ -11,6 +11,9 @@ set HRIS_DIR=%INSTALL_DIR%\hris
 set DATA_DIR=%INSTALL_DIR%\data
 set LOG_DIR=%INSTALL_DIR%\logs
 set LOG_FILE=%INSTALL_DIR%\install.log
+set MYSQLD_BIN=mysqld
+
+if exist "%MARIADB_DIR%\bin\mariadbd.exe" set MYSQLD_BIN=mariadbd
 
 echo [HRIS] Post-install setup starting... & echo [HRIS] Post-install setup starting...> "%LOG_FILE%"
 
@@ -26,14 +29,18 @@ echo [HRIS] Initializing MariaDB... & echo [HRIS] Initializing MariaDB...>> "%LO
 cd /d "%MARIADB_DIR%"
 
 REM Verify MariaDB binaries exist
-if not exist "bin\mysqld.exe" (
-    echo [HRIS] ERROR: MariaDB binaries not found at %MARIADB_DIR%\bin\>> "%LOG_FILE%"
-    echo [HRIS] ERROR: MariaDB binaries not found. Check bundle/mariadb/ structure.
+if not exist "bin\%MYSQLD_BIN%.exe" if not exist "bin\mysqld.exe" (
+    echo [HRIS] ERROR: MariaDB binary not found in bin\. Check bundle/mariadb/ structure.>> "%LOG_FILE%"
+    echo [HRIS] ERROR: MariaDB binary not found. Check bundle/mariadb/ structure.
     exit /b 1
 )
 
 if not exist "%DATA_DIR%\mysql" (
-    bin\mysqld --initialize-insecure --datadir="%DATA_DIR%" --console
+    bin\%MYSQLD_BIN% --initialize-insecure --datadir="%DATA_DIR%" --console
+    if errorlevel 1 (
+        REM Fallback for older MariaDB
+        bin\%MYSQLD_BIN% --initialize --datadir="%DATA_DIR%" --console
+    )
 )
 echo [HRIS] MariaDB data directory initialized. & echo [HRIS] MariaDB data directory initialized.>> "%LOG_FILE%"
 
@@ -55,7 +62,7 @@ REM Step 3: Start MariaDB
 REM ============================================
 echo [HRIS] Starting MariaDB... & echo [HRIS] Starting MariaDB...>> "%LOG_FILE%"
 cd /d "%MARIADB_DIR%"
-bin\mysqld --datadir="%DATA_DIR%" --port=3306 --socket=mysql.sock ^
+bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=3306 --socket=mysql.sock ^
     --skip-grant-tables --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 set MYSQL_PID=!ERRORLEVEL!
 echo [HRIS] MariaDB PID: !MYSQL_PID! & echo [HRIS] MariaDB PID: !MYSQL_PID!>> "%LOG_FILE%"
@@ -82,7 +89,7 @@ bin\mysql -u root -e "FLUSH PRIVILEGES;"
 REM Now restart MariaDB with auth enabled
 bin\mysqladmin -u root shutdown
 timeout /t 2 /nobreak >nul
-bin\mysqld --datadir="%DATA_DIR%" --port=3306 --socket=mysql.sock ^
+bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=3306 --socket=mysql.sock ^
     --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 
 :wait_mysql2
@@ -192,7 +199,7 @@ echo [HRIS] Installing Apache service... & echo [HRIS] Installing Apache service
 "%APACHE_DIR%\bin\httpd.exe" -k start -n "HRIS Apache"
 
 echo [HRIS] Installing MariaDB service... & echo [HRIS] Installing MariaDB service...>> "%LOG_FILE%"
-"%MARIADB_DIR%\bin\mysqld" --install "HRIS MariaDB" --datadir="%DATA_DIR%" --port=3306
+"%MARIADB_DIR%\bin\%MYSQLD_BIN%" --install "HRIS MariaDB" --datadir="%DATA_DIR%" --port=3306
 net start "HRIS MariaDB" >nul 2>&1
 
 REM ============================================
