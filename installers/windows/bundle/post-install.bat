@@ -67,16 +67,23 @@ bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% --socket=mysql.sock ^
 set MYSQL_PID=!ERRORLEVEL!
 echo [HRIS] MariaDB PID: !MYSQL_PID! & echo [HRIS] MariaDB PID: !MYSQL_PID!>> "%LOG_FILE%"
 
-REM Wait for MariaDB to be ready (max 30 seconds)
+REM Wait for MariaDB to be ready (max 60 seconds)
 set TRY_COUNT=0
 :wait_mysql
 set /a TRY_COUNT+=1
-if !TRY_COUNT! gtr 30 (
-    echo [HRIS] ERROR: MariaDB failed to start. Check %LOG_DIR%\mariadb.log>> "%LOG_FILE%"
-    echo [HRIS] ERROR: MariaDB failed to start. See install.log for details.
+if !TRY_COUNT! gtr 60 (
+    echo [HRIS] ERROR: MariaDB failed to start within 60 seconds.>> "%LOG_FILE%"
+    if exist "%LOG_DIR%\mariadb.log" (
+        echo [HRIS] Last 20 lines of mariadb.log:>> "%LOG_FILE%"
+        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log' -Tail 20" >> "%LOG_FILE%"
+    )
+    echo [HRIS] ERROR: MariaDB failed to start. Check %LOG_DIR%\mariadb.log
     exit /b 1
 )
-bin\%MYSQLADMIN_BIN% ping --port=%DB_PORT% --silent 2>nul
+REM Show a progress dot every 5 seconds
+set /a REMAINDER=!TRY_COUNT! %% 5
+if !REMAINDER! equ 0 (echo [HRIS] Waiting for MariaDB... (!TRY_COUNT!s) & echo [HRIS] Waiting for MariaDB... (!TRY_COUNT!s)>> "%LOG_FILE%")
+bin\%MYSQLADMIN_BIN% ping --protocol=tcp --port=%DB_PORT% --silent 2>nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait_mysql
@@ -87,14 +94,14 @@ REM ============================================
 REM Step 4: Create database and user
 REM ============================================
 echo [HRIS] Creating database and user... & echo [HRIS] Creating database and user...>> "%LOG_FILE%"
-bin\mysql -u root --port=%DB_PORT% -e "DROP USER IF EXISTS 'hris'@'localhost';" 2>nul
-bin\mysql -u root --port=%DB_PORT% -e "CREATE USER 'hris'@'localhost' IDENTIFIED BY '%DB_PASS%';"
-bin\mysql -u root --port=%DB_PORT% -e "CREATE DATABASE IF NOT EXISTS hris CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-bin\mysql -u root --port=%DB_PORT% -e "GRANT ALL PRIVILEGES ON hris.* TO 'hris'@'localhost';"
-bin\mysql -u root --port=%DB_PORT% -e "FLUSH PRIVILEGES;"
+bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "DROP USER IF EXISTS 'hris'@'localhost';" 2>nul
+bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "CREATE USER 'hris'@'localhost' IDENTIFIED BY '%DB_PASS%';"
+bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "CREATE DATABASE IF NOT EXISTS hris CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "GRANT ALL PRIVILEGES ON hris.* TO 'hris'@'localhost';"
+bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "FLUSH PRIVILEGES;"
 
 REM Now restart MariaDB with auth enabled
-bin\%MYSQLADMIN_BIN% -u root --port=%DB_PORT% shutdown
+bin\%MYSQLADMIN_BIN% -u root --protocol=tcp --port=%DB_PORT% shutdown
 timeout /t 2 /nobreak >nul
 bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% --socket=mysql.sock ^
     --console > "%LOG_DIR%\mariadb.log" 2>&1 &
@@ -102,12 +109,18 @@ bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% --socket=mysql.sock ^
 set TRY_COUNT=0
 :wait_mysql2
 set /a TRY_COUNT+=1
-if !TRY_COUNT! gtr 30 (
-    echo [HRIS] ERROR: MariaDB failed to restart. Check %LOG_DIR%\mariadb.log>> "%LOG_FILE%"
-    echo [HRIS] ERROR: MariaDB failed to restart. See install.log for details.
+if !TRY_COUNT! gtr 60 (
+    echo [HRIS] ERROR: MariaDB failed to restart within 60 seconds.>> "%LOG_FILE%"
+    if exist "%LOG_DIR%\mariadb.log" (
+        echo [HRIS] Last 20 lines of mariadb.log:>> "%LOG_FILE%"
+        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log' -Tail 20" >> "%LOG_FILE%"
+    )
+    echo [HRIS] ERROR: MariaDB failed to restart. Check %LOG_DIR%\mariadb.log
     exit /b 1
 )
-bin\%MYSQLADMIN_BIN% ping --port=%DB_PORT% --silent 2>nul
+set /a REMAINDER=!TRY_COUNT! %% 5
+if !REMAINDER! equ 0 (echo [HRIS] Waiting for MariaDB restart... (!TRY_COUNT!s) & echo [HRIS] Waiting for MariaDB restart... (!TRY_COUNT!s)>> "%LOG_FILE%")
+bin\%MYSQLADMIN_BIN% ping --protocol=tcp --port=%DB_PORT% --silent 2>nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait_mysql2
@@ -221,7 +234,7 @@ REM ============================================
 REM Step 10: Cleanup
 REM ============================================
 REM Stop the temporary MariaDB instance and let the service take over
-"%MARIADB_DIR%\bin\%MYSQLADMIN_BIN%" -u root --port=%DB_PORT% shutdown 2>nul
+"%MARIADB_DIR%\bin\%MYSQLADMIN_BIN%" -u root --protocol=tcp --port=%DB_PORT% shutdown 2>nul
 
 echo [HRIS] Setup complete! & echo [HRIS] Setup complete!>> "%LOG_FILE%"
 echo [HRIS] You can now access HRIS at http://localhost:%HTTP_PORT% & echo [HRIS] You can now access HRIS at http://localhost:%HTTP_PORT%>> "%LOG_FILE%"
