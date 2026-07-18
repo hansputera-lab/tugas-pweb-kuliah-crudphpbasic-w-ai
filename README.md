@@ -156,18 +156,67 @@ Setelah berhasil menjalankan, login dengan akun berikut:
 
 ## Cara Lain (Alternatif)
 
-Selain XAMPP, ada 3 cara lain untuk menjalankan HRIS:
+### Docker (Laravel Sail)
 
-**Docker** — Untuk yang sudah paham Docker. Buka terminal di folder project:
+**Yang dibutuhkan:**
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows/Mac) atau Docker Engine (Linux)
+- Git
+
+**Langkah-langkah:**
+
+#### 1. Install Docker Desktop
+
+Download dari [docker.com](https://www.docker.com/products/docker-desktop/), install, lalu jalankan.  
+Tunggu sampai icon Docker di taskbar/show system icons sudah stabil (tidak animasi).
+
+#### 2. Download Project
+
+```bash
+git clone https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai.git hris
+cd hris
+```
+
+#### 3. Jalankan Container
+
 ```bash
 ./sail up -d
+```
+
+Perintah ini akan mendownload image Docker (PHP 8.5, MariaDB 11) dan menjalankan aplikasi.  
+Mungkin butuh 5–10 menit tergantung koneksi internet.
+
+#### 4. Generate App Key (cukup sekali)
+
+```bash
 ./sail artisan key:generate
 ```
-Akses di `http://localhost:7774` | Database di `localhost:7775` (user: sail, pass: password)
 
-**Windows Installer** — Download `HRIS-Setup.exe` dari [Releases](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases). Install seperti aplikasi biasa, semua sudah include.
+#### 5. Buka Aplikasi
 
-**Linux Installer** — Satu perintah, otomatis:
+Akses `http://localhost:7774` di browser.  
+Database bisa diakses di `localhost:7775` (user: `sail`, password: `password`).
+
+> **Catatan:** Migrasi dan seeder berjalan **otomatis** setiap container menyala. Jadi tidak perlu menjalankan `migrate --seed` manual.
+
+#### Perintah Docker yang Sering Dipakai
+
+| Perintah | Fungsinya |
+|----------|-----------|
+| `./sail up -d` | Menjalankan container di background |
+| `./sail stop` | Menghentikan container |
+| `./sail down` | Menghentikan dan menghapus container |
+| `./sail artisan ...` | Menjalankan perintah Laravel (contoh: `./sail artisan route:list`) |
+| `./sail composer ...` | Menjalankan Composer di dalam container |
+| `./sail npm ...` | Menjalankan npm di dalam container |
+| `./sail logs` | Melihat log aplikasi |
+
+### Windows Installer
+
+Download `HRIS-Setup.exe` dari [Releases](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases). Install seperti aplikasi biasa, semua sudah include.
+
+### Linux Installer
+
+Satu perintah, otomatis:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash -s -- --nginx
 ```
