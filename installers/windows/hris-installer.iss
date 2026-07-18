@@ -8,7 +8,7 @@
 ;   4. Open this .iss in Inno Setup and compile
 
 #define MyAppName "HRIS"
-#define MyAppVersion "1.0"
+#define MyAppVersion "2.0"
 #define MyAppPublisher "HRIS Team"
 #define MyAppURL "http://localhost:7774"
 #define MyAppExeName "start.bat"
@@ -79,10 +79,17 @@ Filename: "{#MyAppURL}"; Description: "Launch HRIS"; Flags: postinstall nowait s
 Filename: "{app}\stop.bat"; WorkingDir: "{app}"; Flags: runhidden
 
 [UninstallDelete]
+; Runtime data
 Name: "{app}\data"; Type: filesandordirs
 Name: "{app}\logs"; Type: filesandordirs
+; Generated config files
+Name: "{app}\mariadb\my.ini"; Type: files
+Name: "{app}\apache\conf\httpd.conf"; Type: files
+Name: "{app}\php\php.ini"; Type: files
+; Logs and credentials
 Name: "{app}\install.log"; Type: files
 Name: "{app}\credentials.txt"; Type: files
+; HRIS generated files
 Name: "{app}\hris\.env"; Type: files
 Name: "{app}\hris\storage"; Type: filesandordirs
 Name: "{app}\hris\bootstrap\cache"; Type: filesandordirs

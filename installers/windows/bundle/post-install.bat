@@ -1,6 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
 
+REM ============================================================
+REM  HRIS Post-Install Setup
+REM  Runs after file extraction to configure MariaDB, Apache,
+REM  PHP, .env, and install Windows services.
+REM ============================================================
+
 set INSTALL_DIR=%~1
 if "%INSTALL_DIR%"=="" set INSTALL_DIR=%CD%
 
@@ -13,57 +19,87 @@ set LOG_DIR=%INSTALL_DIR%\logs
 set LOG_FILE=%INSTALL_DIR%\install.log
 set HTTP_PORT=7774
 set DB_PORT=7775
-set MYSQLD_BIN=mysqld
-set MYSQLADMIN_BIN=mysqladmin
 
+REM Detect MariaDB binary (mariadbd for 11.x, mysqld for 10.x)
+set MYSQLD_BIN=mysqld
 if exist "%MARIADB_DIR%\bin\mariadbd.exe" set MYSQLD_BIN=mariadbd
+set MYSQLADMIN_BIN=mysqladmin
 if exist "%MARIADB_DIR%\bin\mariadb-admin.exe" set MYSQLADMIN_BIN=mariadb-admin
 
-echo [HRIS] Post-install setup starting... & echo [HRIS] Post-install setup starting...> "%LOG_FILE%"
+echo [HRIS] Post-install setup starting...
+echo [HRIS] Install dir: %INSTALL_DIR%> "%LOG_FILE%"
 
+goto :main
+
+REM ============================================================
+REM  Subroutines
+REM ============================================================
+
+:log
+echo [HRIS] %*>> "%LOG_FILE%"
+echo [HRIS] %*
+exit /b 0
+
+:dump_log
+if exist "%LOG_DIR%\mariadb.log" (
+    echo.
+    type "%LOG_DIR%\mariadb.log"
+    echo.>> "%LOG_FILE%"
+    echo --- mariadb.log --->> "%LOG_FILE%"
+    type "%LOG_DIR%\mariadb.log" >> "%LOG_FILE%"
+)
+exit /b 0
+
+:wait_for_mysql
+set TRY_COUNT=0
+:wait_loop
+set /a TRY_COUNT+=1
+if !TRY_COUNT! gtr 60 (
+    call :dump_log
+    exit /b 1
+)
+set /a REMAINDER=!TRY_COUNT! %% 5
+if !REMAINDER! equ 0 echo [HRIS] Waiting for MariaDB... (!TRY_COUNT!s)
+netstat -an | findstr /C:":%DB_PORT% " >nul
+if errorlevel 1 (
+    timeout /t 1 /nobreak >nul
+    goto wait_loop
+)
+exit /b 0
+
+:check_process
+tasklist /FI "IMAGENAME eq %MYSQLD_BIN%.exe" /NH 2>nul | findstr /I "%MYSQLD_BIN%" >nul
+if errorlevel 1 (
+    tasklist /FI "IMAGENAME eq mysqld.exe" /NH 2>nul | findstr /I "mysqld" >nul
+)
+exit /b %errorlevel%
+
+:init_datadir
+call :log "Trying mariadb-install-db..."
+bin\mariadb-install-db.exe --datadir="%DATA_DIR%"
+if not errorlevel 1 exit /b 0
+call :log "Trying mysql_install_db..."
+bin\mysql_install_db.exe --datadir="%DATA_DIR%"
+if not errorlevel 1 exit /b 0
+call :log "Trying %MYSQLD_BIN% --initialize-insecure..."
+bin\%MYSQLD_BIN% --initialize-insecure --datadir="%DATA_DIR%"
+if not errorlevel 1 exit /b 0
+call :log "Trying %MYSQLD_BIN% --initialize..."
+bin\%MYSQLD_BIN% --initialize --datadir="%DATA_DIR%"
+if not errorlevel 1 exit /b 0
+call :log "ERROR: All data directory initialization methods failed."
+exit /b 1
+
+REM ============================================================
+:main
+REM ============================================================
+
+REM 1. Create directories
 if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
-echo [HRIS] Install dir: %INSTALL_DIR%>> "%LOG_FILE%"
-
-REM ============================================
-REM Step 1: Initialize MariaDB
-REM ============================================
-echo [HRIS] Initializing MariaDB... & echo [HRIS] Initializing MariaDB...>> "%LOG_FILE%"
-cd /d "%MARIADB_DIR%"
-
-REM Verify MariaDB binaries exist
-if not exist "bin\%MYSQLD_BIN%.exe" if not exist "bin\mysqld.exe" (
-    echo [HRIS] ERROR: MariaDB binary not found in bin\. Check bundle/mariadb/ structure.>> "%LOG_FILE%"
-    echo [HRIS] ERROR: MariaDB binary not found. Check bundle/mariadb/ structure.
-    exit /b 1
-)
-
-if not exist "%DATA_DIR%\mysql" (
-    call :init_datadir
-)
-echo [HRIS] MariaDB data directory initialized. & echo [HRIS] MariaDB data directory initialized.>> "%LOG_FILE%"
-
-REM ============================================
-REM Step 2: Generate random DB password
-REM ============================================
-echo [HRIS] Generating database password... & echo [HRIS] Generating database password...>> "%LOG_FILE%"
-setlocal
-set CHARS=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
-set DB_PASS=
-for /l %%i in (1,1,24) do (
-    set /a R=!random! %% 62
-    for %%j in (!R!) do set DB_PASS=!DB_PASS!!CHARS:~%%j,1!
-)
-endlocal & set DB_PASS=%DB_PASS%
-
-REM ============================================
-REM Step 3: Start MariaDB
-REM ============================================
-echo [HRIS] Starting MariaDB... & echo [HRIS] Starting MariaDB...>> "%LOG_FILE%"
-cd /d "%MARIADB_DIR%"
-
-REM Generate my.ini for reliable configuration
+REM 2. Generate my.ini for reliable MariaDB configuration
+call :log "Generating my.ini..."
 (
 echo [client]
 echo port=%DB_PORT%
@@ -75,135 +111,109 @@ echo datadir="%DATA_DIR%"
 echo skip-networking=0
 ) > "%MARIADB_DIR%\my.ini"
 
-REM Remove old log and start fresh
+REM 3. Initialize MariaDB data directory
+call :log "Initializing MariaDB data directory..."
+cd /d "%MARIADB_DIR%"
+if not exist "%DATA_DIR%\mysql" (
+    call :init_datadir
+    if errorlevel 1 (
+        call :dump_log
+        call :log "ERROR: Could not initialize MariaDB data directory."
+        exit /b 1
+    )
+)
+call :log "Data directory ready."
+
+REM 4. Generate random database password (24 chars)
+setlocal
+set CHARS=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
+set DB_PASS=
+for /l %%i in (1,1,24) do (
+    set /a R=!random! %% 62
+    for %%j in (!R!) do set DB_PASS=!DB_PASS!!CHARS:~%%j,1!
+)
+endlocal & set DB_PASS=%DB_PASS%
+
+REM 5. Start MariaDB with skip-grant-tables for initial setup
+call :log "Starting MariaDB (skip-grant-tables)..."
+cd /d "%MARIADB_DIR%"
 if exist "%LOG_DIR%\mariadb.log" del "%LOG_DIR%\mariadb.log"
 
-REM Start mysqld (port etc. read from my.ini, only varying flags on command line)
-bin\%MYSQLD_BIN% --defaults-file="%MARIADB_DIR%\my.ini" ^
-    --skip-grant-tables --console > "%LOG_DIR%\mariadb.log" 2>&1 &
+bin\%MYSQLD_BIN% --defaults-file="%MARIADB_DIR%\my.ini" --skip-grant-tables --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 
-REM Give it a moment, then check if the process is alive
 timeout /t 2 /nobreak >nul
-tasklist /FI "IMAGENAME eq %MYSQLD_BIN%.exe" /NH 2>nul | findstr /I "%MYSQLD_BIN%" >nul
+call :check_process
 if errorlevel 1 (
-    tasklist /FI "IMAGENAME eq mysqld.exe" /NH 2>nul | findstr /I "mysqld" >nul
-)
-if errorlevel 1 (
-    echo [HRIS] ERROR: MariaDB process died. Dumping log:>> "%LOG_FILE%"
-    if exist "%LOG_DIR%\mariadb.log" (
-        type "%LOG_DIR%\mariadb.log" >> "%LOG_FILE%"
-        echo [HRIS] --- mariadb.log ---
-        type "%LOG_DIR%\mariadb.log"
-    )
-    echo [HRIS] ERROR: MariaDB failed to start. Check install.log for details.
+    call :dump_log
+    call :log "ERROR: MariaDB process died immediately after launch."
     exit /b 1
 )
-echo [HRIS] MariaDB process is running. & echo [HRIS] MariaDB process is running.>> "%LOG_FILE%"
 
-REM Wait for the TCP port to be ready (max 60 seconds)
-set TRY_COUNT=0
-:wait_mysql
-set /a TRY_COUNT+=1
-if !TRY_COUNT! gtr 60 (
-    echo [HRIS] ERROR: MariaDB TCP port %DB_PORT% not listening after 60s.>> "%LOG_FILE%"
-    if exist "%LOG_DIR%\mariadb.log" (
-        echo [HRIS] Full mariadb.log:>> "%LOG_FILE%"
-        type "%LOG_DIR%\mariadb.log" >> "%LOG_FILE%"
-        echo [HRIS] --- mariadb.log ---
-        type "%LOG_DIR%\mariadb.log"
-    )
+call :wait_for_mysql
+if errorlevel 1 (
+    call :log "ERROR: Timed out waiting for MariaDB TCP port %DB_PORT%."
     exit /b 1
 )
-set /a REMAINDER=!TRY_COUNT! %% 5
-if !REMAINDER! equ 0 (echo [HRIS] Waiting for MariaDB TCP port... (!TRY_COUNT!s) & echo [HRIS] Waiting for MariaDB TCP port... (!TRY_COUNT!s)>> "%LOG_FILE%")
-REM Check if MariaDB TCP port is listening using netstat
-netstat -an | findstr /C:":%DB_PORT% " >nul
-if errorlevel 1 (
-    timeout /t 1 /nobreak >nul
-    goto wait_mysql
-)
-echo [HRIS] MariaDB is ready. & echo [HRIS] MariaDB is ready.>> "%LOG_FILE%"
+call :log "MariaDB is running."
 
-REM ============================================
-REM Step 4: Create database and user
-REM ============================================
-echo [HRIS] Creating database and user... & echo [HRIS] Creating database and user...>> "%LOG_FILE%"
+REM 6. Create database user, database, and grant privileges
+call :log "Creating database and user..."
+cd /d "%MARIADB_DIR%"
 bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "DROP USER IF EXISTS 'hris'@'localhost';" 2>nul
 bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "CREATE USER 'hris'@'localhost' IDENTIFIED BY '%DB_PASS%';"
+if errorlevel 1 (
+    call :dump_log
+    call :log "ERROR: Failed to create database user."
+    exit /b 1
+)
 bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "CREATE DATABASE IF NOT EXISTS hris CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+if errorlevel 1 (
+    call :log "ERROR: Failed to create database."
+    exit /b 1
+)
 bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "GRANT ALL PRIVILEGES ON hris.* TO 'hris'@'localhost';"
 bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "FLUSH PRIVILEGES;"
 
-REM Now restart MariaDB with auth enabled (no --skip-grant-tables)
+REM 7. Restart MariaDB with authentication enabled
+call :log "Restarting MariaDB without skip-grant-tables..."
+cd /d "%MARIADB_DIR%"
 bin\%MYSQLADMIN_BIN% -u root --protocol=tcp --port=%DB_PORT% shutdown
-timeout /t 2 /nobreak >nul
-bin\%MYSQLD_BIN% --defaults-file="%MARIADB_DIR%\my.ini" ^
-    --console > "%LOG_DIR%\mariadb.log" 2>&1 &
+timeout /t 3 /nobreak >nul
+
+bin\%MYSQLD_BIN% --defaults-file="%MARIADB_DIR%\my.ini" --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 
 timeout /t 2 /nobreak >nul
-tasklist /FI "IMAGENAME eq %MYSQLD_BIN%.exe" /NH 2>nul | findstr /I "%MYSQLD_BIN%" >nul
+call :check_process
 if errorlevel 1 (
-    tasklist /FI "IMAGENAME eq mysqld.exe" /NH 2>nul | findstr /I "mysqld" >nul
-)
-if errorlevel 1 (
-    echo [HRIS] ERROR: MariaDB process died after restart. Dumping log:>> "%LOG_FILE%"
-    if exist "%LOG_DIR%\mariadb.log" (
-        type "%LOG_DIR%\mariadb.log" >> "%LOG_FILE%"
-        echo [HRIS] --- mariadb.log ---
-        type "%LOG_DIR%\mariadb.log"
-    )
-    echo [HRIS] ERROR: MariaDB failed to restart. Check install.log for details.
+    call :dump_log
+    call :log "ERROR: MariaDB process died after restart."
     exit /b 1
 )
-echo [HRIS] MariaDB process restarted. & echo [HRIS] MariaDB process restarted.>> "%LOG_FILE%"
 
-set TRY_COUNT=0
-:wait_mysql2
-set /a TRY_COUNT+=1
-if !TRY_COUNT! gtr 60 (
-    echo [HRIS] ERROR: MariaDB TCP port %DB_PORT% not listening after restart.>> "%LOG_FILE%"
-    if exist "%LOG_DIR%\mariadb.log" (
-        echo [HRIS] Full mariadb.log:>> "%LOG_FILE%"
-        type "%LOG_DIR%\mariadb.log" >> "%LOG_FILE%"
-        echo [HRIS] --- mariadb.log ---
-        type "%LOG_DIR%\mariadb.log"
-    )
+call :wait_for_mysql
+if errorlevel 1 (
+    call :log "ERROR: Timed out waiting for MariaDB TCP port after restart."
     exit /b 1
 )
-set /a REMAINDER=!TRY_COUNT! %% 5
-if !REMAINDER! equ 0 (echo [HRIS] Waiting for MariaDB restart... (!TRY_COUNT!s) & echo [HRIS] Waiting for MariaDB restart... (!TRY_COUNT!s)>> "%LOG_FILE%")
-netstat -an | findstr /C:":%DB_PORT% " >nul
-if errorlevel 1 (
-    timeout /t 1 /nobreak >nul
-    goto wait_mysql2
-)
+call :log "Database configured."
 
-echo [HRIS] Database configured. & echo [HRIS] Database configured.>> "%LOG_FILE%"
-
-REM ============================================
-REM Step 5: Configure .env
-REM ============================================
-echo [HRIS] Configuring .env... & echo [HRIS] Configuring .env...>> "%LOG_FILE%"
+REM 8. Configure .env file
+call :log "Configuring .env..."
 cd /d "%HRIS_DIR%"
 if exist .env.example (
     copy /Y .env.example .env >nul
 )
 
-REM Update .env with database credentials (uncomment and set values)
+powershell -Command "(Get-Content .env) -replace 'DB_CONNECTION=sqlite', 'DB_CONNECTION=mysql' | Set-Content .env"
+powershell -Command "(Get-Content .env) -replace '# DB_HOST=.*', 'DB_HOST=127.0.0.1' | Set-Content .env"
+powershell -Command "(Get-Content .env) -replace '# DB_PORT=.*', 'DB_PORT=%DB_PORT%' | Set-Content .env"
 powershell -Command "(Get-Content .env) -replace '# DB_DATABASE=.*', 'DB_DATABASE=hris' | Set-Content .env"
 powershell -Command "(Get-Content .env) -replace '# DB_USERNAME=.*', 'DB_USERNAME=hris' | Set-Content .env"
 powershell -Command "(Get-Content .env) -replace '# DB_PASSWORD=.*', 'DB_PASSWORD=%DB_PASS%' | Set-Content .env"
-powershell -Command "(Get-Content .env) -replace '# DB_HOST=.*', 'DB_HOST=127.0.0.1' | Set-Content .env"
-powershell -Command "(Get-Content .env) -replace '# DB_PORT=.*', 'DB_PORT=%DB_PORT%' | Set-Content .env"
 powershell -Command "(Get-Content .env) -replace 'APP_URL=.*', 'APP_URL=http://localhost:%HTTP_PORT%' | Set-Content .env"
 
-REM ============================================
-REM Step 6: Configure Apache
-REM ============================================
-echo [HRIS] Configuring Apache... & echo [HRIS] Configuring Apache...>> "%LOG_FILE%"
-cd /d "%APACHE_DIR%"
-
-REM Generate httpd.conf
+REM 9. Configure Apache httpd.conf
+call :log "Configuring Apache..."
 (
 echo ServerRoot "%APACHE_DIR:\=\\%"
 echo ServerName localhost:%HTTP_PORT%
@@ -229,70 +239,60 @@ echo CustomLog "%LOG_DIR:\=\\%\\apache_access.log" common
 echo TypesConfig conf/mime.types
 ) > "%APACHE_DIR%\conf\httpd.conf"
 
-REM ============================================
-REM Step 7: Configure PHP
-REM ============================================
-echo [HRIS] Configuring PHP... & echo [HRIS] Configuring PHP...>> "%LOG_FILE%"
+REM 10. Configure PHP
+call :log "Configuring PHP..."
 cd /d "%PHP_DIR%"
 if exist php.ini-production (
     copy /Y php.ini-production php.ini >nul
 )
 
-REM Enable required extensions
 powershell -Command "(Get-Content php.ini) -replace ';extension=mbstring', 'extension=mbstring' | Set-Content php.ini"
 powershell -Command "(Get-Content php.ini) -replace ';extension=openssl', 'extension=openssl' | Set-Content php.ini"
 powershell -Command "(Get-Content php.ini) -replace ';extension=pdo_mysql', 'extension=pdo_mysql' | Set-Content php.ini"
 powershell -Command "(Get-Content php.ini) -replace ';extension=gd', 'extension=gd' | Set-Content php.ini"
 powershell -Command "(Get-Content php.ini) -replace ';extension=curl', 'extension=curl' | Set-Content php.ini"
 powershell -Command "(Get-Content php.ini) -replace ';extension=fileinfo', 'extension=fileinfo' | Set-Content php.ini"
-powershell -Command "(Get-Content php.ini) -replace 'extension_dir=\"ext\"', 'extension_dir=\"%PHP_DIR%\ext\"' | Set-Content php.ini"
+powershell -Command "(Get-Content php.ini) -replace 'extension_dir=\"ext\"', 'extension_dir=\"%PHP_DIR:\=\\%\\ext\"' | Set-Content php.ini"
 
-REM ============================================
-REM Step 8: Run Laravel setup
-REM ============================================
-echo [HRIS] Running Laravel setup... & echo [HRIS] Running Laravel setup...>> "%LOG_FILE%"
+REM 11. Laravel setup (key, migrate, storage link, permissions)
+call :log "Running Laravel setup..."
 cd /d "%HRIS_DIR%"
 
-REM Generate app key
 php artisan key:generate --force
-echo [HRIS] App key generated. & echo [HRIS] App key generated.>> "%LOG_FILE%"
+if errorlevel 1 (
+    call :log "ERROR: php artisan key:generate failed."
+    exit /b 1
+)
+call :log "App key generated."
 
-REM Run migrations
 php artisan migrate --seed --force
-echo [HRIS] Migrations complete. & echo [HRIS] Migrations complete.>> "%LOG_FILE%"
+if errorlevel 1 (
+    call :log "ERROR: php artisan migrate --seed failed."
+    exit /b 1
+)
+call :log "Migrations complete."
 
-REM Create storage link
 php artisan storage:link --force
-echo [HRIS] Storage link created. & echo [HRIS] Storage link created.>> "%LOG_FILE%"
+call :log "Storage link created."
 
-REM Set permissions
 icacls storage /grant "Everyone:(OI)(CI)M" /T /Q
 icacls bootstrap/cache /grant "Everyone:(OI)(CI)M" /T /Q
 icacls public/uploads /grant "Everyone:(OI)(CI)M" /T /Q
-echo [HRIS] Permissions set. & echo [HRIS] Permissions set.>> "%LOG_FILE%"
+call :log "Permissions set."
 
-REM ============================================
-REM Step 9: Install services
-REM ============================================
-echo [HRIS] Installing Apache service... & echo [HRIS] Installing Apache service...>> "%LOG_FILE%"
-"%APACHE_DIR%\bin\httpd.exe" -k install -n "HRIS Apache"
+REM 12. Install Windows services
+call :log "Installing Apache service..."
+"%APACHE_DIR%\bin\httpd.exe" -k install -n "HRIS Apache" 2>nul
 "%APACHE_DIR%\bin\httpd.exe" -k start -n "HRIS Apache"
 
-echo [HRIS] Installing MariaDB service... & echo [HRIS] Installing MariaDB service...>> "%LOG_FILE%"
-"%MARIADB_DIR%\bin\%MYSQLD_BIN%" --install "HRIS MariaDB" --defaults-file="%MARIADB_DIR%\my.ini"
+call :log "Installing MariaDB service..."
+"%MARIADB_DIR%\bin\%MYSQLD_BIN%" --install "HRIS MariaDB" --defaults-file="%MARIADB_DIR%\my.ini" 2>nul
 net start "HRIS MariaDB" >nul 2>&1
 
-REM ============================================
-REM Step 10: Cleanup
-REM ============================================
-REM Stop the temporary MariaDB instance and let the service take over
+REM 13. Shutdown temporary MariaDB instance (service takes over)
 "%MARIADB_DIR%\bin\%MYSQLADMIN_BIN%" -u root --protocol=tcp --port=%DB_PORT% shutdown 2>nul
 
-echo [HRIS] Setup complete! & echo [HRIS] Setup complete!>> "%LOG_FILE%"
-echo [HRIS] You can now access HRIS at http://localhost:%HTTP_PORT% & echo [HRIS] You can now access HRIS at http://localhost:%HTTP_PORT%>> "%LOG_FILE%"
-echo [HRIS] Database password: %DB_PASS% & echo [HRIS] Database password: %DB_PASS%>> "%LOG_FILE%"
-
-REM Save credentials to a note file
+REM 14. Save credentials and print summary
 (
 echo HRIS Installation Summary
 echo ========================
@@ -305,26 +305,14 @@ echo Database Port: %DB_PORT%
 echo.
 echo Default login: admin@hris.test / password
 ) > "%INSTALL_DIR%\credentials.txt"
+
+call :log "========================================"
+call :log "HRIS Setup Complete!"
+call :log ""
+call :log "URL:      http://localhost:%HTTP_PORT%"
+call :log "Database: hris / hris / %DB_PASS%"
+call :log ""
+call :log "Default login: admin@hris.test / password"
+call :log "========================================"
+
 exit /b 0
-
-:init_datadir
-echo [HRIS] Initializing MariaDB data directory...
-echo [HRIS] Trying mariadb-install-db...>> "%LOG_FILE%"
-bin\mariadb-install-db.exe --datadir="%DATA_DIR%"
-if not errorlevel 1 goto :eof
-
-echo [HRIS] Trying mysql_install_db...>> "%LOG_FILE%"
-bin\mysql_install_db.exe --datadir="%DATA_DIR%"
-if not errorlevel 1 goto :eof
-
-echo [HRIS] Trying %MYSQLD_BIN% --initialize-insecure...>> "%LOG_FILE%"
-bin\%MYSQLD_BIN% --initialize-insecure --datadir="%DATA_DIR%"
-if not errorlevel 1 goto :eof
-
-echo [HRIS] Trying %MYSQLD_BIN% --initialize...>> "%LOG_FILE%"
-bin\%MYSQLD_BIN% --initialize --datadir="%DATA_DIR%"
-if not errorlevel 1 goto :eof
-
-echo [HRIS] ERROR: All data directory initialization methods failed.>> "%LOG_FILE%"
-echo [HRIS] ERROR: Could not initialize MariaDB data directory. See install.log for details.
-exit /b 1

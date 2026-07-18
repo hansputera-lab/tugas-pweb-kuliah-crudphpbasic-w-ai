@@ -40,7 +40,25 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 ## Prerequisites by Platform
 
 ### Docker (cross-platform)
-- Docker & Docker Compose
+- Docker & Docker Compose (or Docker Desktop)
+
+**Quick start with Laravel Sail:**
+
+```bash
+# Start all containers in background
+./sail up -d
+
+# Generate app key (first time only)
+./sail artisan key:generate
+
+# Run migrations and seeders
+./sail artisan migrate --seed
+
+# Access at http://localhost:7774
+# MariaDB runs on localhost:7775 (user: sail, password: password)
+```
+
+> App runs on port **7774** and MariaDB on port **7775** to avoid conflicts with existing services. You can change these via `APP_PORT` and `FORWARD_DB_PORT` in `.env`.
 
 ### Windows (XAMPP)
 - XAMPP 8.2+ (PHP, MySQL, Apache bundled)
@@ -60,7 +78,10 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 
 ## Deployment Guide
 
-The recommended way to deploy HRIS is using the automated installers below.
+The recommended way to deploy HRIS is using the automated installers below.  
+For development, Docker via Laravel Sail is also supported.
+
+**Docker** — `./sail up -d` then `./sail artisan migrate --seed`. See details above.
 
 **Windows** — Download the pre-built `HRIS-Setup.exe` from the [Releases page](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases). The source for building it yourself is in [`installers/windows/`](installers/windows/).
 
@@ -82,7 +103,7 @@ See `installers/linux/README.md` for environment variables, uninstall, and distr
 
 ---
 
-> **Manual / Docker setup:** If you prefer to set up by hand or use Laravel Sail, refer to the manual steps in the [v1.0.0 tag](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai) or the original [project template](https://github.com/laravel/laravel).
+> **Manual setup:** If you prefer to set up by hand, refer to the manual steps in the [v1.0.0 tag](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai) or the original [project template](https://github.com/laravel/laravel).
 
 ## Alternative: Import SQL Dump (skip migration)
 
@@ -121,7 +142,7 @@ Lihat `installers/linux/README.md` untuk variabel lingkungan, uninstall, dan det
 
 ---
 
-> **Setup manual / Docker:** Jika ingin melakukan instalasi manual atau menggunakan Laravel Sail, lihat langkah-langkah di [tag v1.0.0](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai) atau [project template asli](https://github.com/laravel/laravel).
+> **Setup manual:** Jika ingin melakukan instalasi manual, lihat langkah-langkah di [tag v1.0.0](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai) atau [project template asli](https://github.com/laravel/laravel).
 
 ## Alternatif: Import SQL Dump (lewati migrasi)
 

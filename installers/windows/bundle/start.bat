@@ -3,19 +3,16 @@ title HRIS - Starting Services
 
 set INSTALL_DIR=%~dp0
 set HTTP_PORT=7774
-set DB_PORT=7775
 
 echo Starting HRIS services...
 echo.
 
-REM Detect MariaDB binary name (mariadbd for 11+, mysqld for 10.x)
-set MYSQLD_BIN=mysqld
-if exist "%INSTALL_DIR%mariadb\bin\mariadbd.exe" set MYSQLD_BIN=mariadbd
-
 echo [1/2] Starting MariaDB...
 net start "HRIS MariaDB" 2>nul
 if errorlevel 1 (
-    "%INSTALL_DIR%mariadb\bin\%MYSQLD_BIN%" --datadir="%INSTALL_DIR%data" --port=%DB_PORT% --console
+    set MYSQLD_BIN=mysqld
+    if exist "%INSTALL_DIR%mariadb\bin\mariadbd.exe" set MYSQLD_BIN=mariadbd
+    "%INSTALL_DIR%mariadb\bin\%MYSQLD_BIN%" --defaults-file="%INSTALL_DIR%mariadb\my.ini" --console
 )
 echo   MariaDB is running.
 
