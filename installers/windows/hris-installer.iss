@@ -78,27 +78,4 @@ Filename: "http://localhost"; Description: "Launch HRIS"; Flags: postinstall now
 [UninstallRun]
 Filename: "{app}\stop.bat"; WorkingDir: "{app}"; Flags: runhidden
 
-[Code]
-
-var
-  InfoPage: TOutputProgressWizardPage;
-
-procedure InitializeWizard;
-begin
-  InfoPage := CreateOutputProgressPage('Installing', 'Setting up HRIS components...');
-end;
-
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if CurStep = ssInstall then
-  begin
-    InfoPage.Show;
-    InfoPage.SetText('Copying files...', '');
-  end;
-  if CurStep = ssDone then
-  begin
-    InfoPage.Hide;
-  end;
-end;
-
 
