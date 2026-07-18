@@ -24,6 +24,7 @@ services:
             - sail
         depends_on:
             - mariadb
+        command: bash -c "php artisan migrate --seed --force && exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"
     mariadb:
         image: 'mariadb:11'
         ports:
