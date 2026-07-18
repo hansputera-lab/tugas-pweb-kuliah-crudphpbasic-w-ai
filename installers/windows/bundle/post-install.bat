@@ -36,11 +36,11 @@ if not exist "bin\%MYSQLD_BIN%.exe" if not exist "bin\mysqld.exe" (
 )
 
 if not exist "%DATA_DIR%\mysql" (
-    bin\%MYSQLD_BIN% --initialize-insecure --datadir="%DATA_DIR%" --console
-    if errorlevel 1 (
-        REM Fallback for older MariaDB
-        bin\%MYSQLD_BIN% --initialize --datadir="%DATA_DIR%" --console
-    )
+    REM Try multiple initialization methods for different MariaDB/MySQL versions
+    bin\%MYSQLD_BIN% --initialize-insecure --datadir="%DATA_DIR%" --console || ^
+    bin\%MYSQLD_BIN% --initialize --datadir="%DATA_DIR%" --console || ^
+    bin\mariadb-install-db.exe --datadir="%DATA_DIR%" --force || ^
+    bin\mysql_install_db.exe --datadir="%DATA_DIR%" --force
 )
 echo [HRIS] MariaDB data directory initialized. & echo [HRIS] MariaDB data directory initialized.>> "%LOG_FILE%"
 
