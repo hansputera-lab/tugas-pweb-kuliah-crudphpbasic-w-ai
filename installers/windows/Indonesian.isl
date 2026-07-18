@@ -5,13 +5,13 @@
 LanguageID=0x0421
 LanguageName=Indonesian
 LanguageCodePage=1252
-DialogFont=Nama Font
+DialogFontName=MS Sans Serif
 DialogFontSize=8
-WelcomeFont=Nama Font
+WelcomeFontName=MS Sans Serif
 WelcomeFontSize=12
-TitleFont=Nama Font
+TitleFontName=MS Sans Serif
 TitleFontSize=29
-CopyrightFont=Nama Font
+CopyrightFontName=MS Sans Serif
 CopyrightFontSize=8
 
 [Messages]
