@@ -34,8 +34,8 @@ Extract each into its respective folder under `bundle/`:
 cd \path\to\hris
 npm install && npm run build
 
-# 2. Copy the project to the bundle folder
-xcopy /E /I . installers\windows\bundle\hris\
+# 2. Copy the project to the bundle folder (skips installers/, .git, etc.)
+robocopy . installers\windows\bundle\hris\ /E /XD installers .git node_modules vendor
 
 # 3. Open hris-installer.iss in Inno Setup
 # 4. Click Build → Compile (or press Ctrl+F9)
