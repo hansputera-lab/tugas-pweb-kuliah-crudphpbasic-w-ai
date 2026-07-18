@@ -33,7 +33,7 @@ SetupLogging=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
-Name: "indonesian"; MessagesFile: "compiler:Languages\Indonesian.isl"
+Name: "indonesian"; MessagesFile: "Indonesian.isl"
 
 [Types]
 Name: "full"; Description: "Full installation (Apache + PHP + MariaDB + HRIS)"
