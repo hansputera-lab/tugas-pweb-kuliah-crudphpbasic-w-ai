@@ -15,4 +15,3 @@ echo   MariaDB stopped.
 echo.
 echo All HRIS services stopped.
 echo.
-pause
