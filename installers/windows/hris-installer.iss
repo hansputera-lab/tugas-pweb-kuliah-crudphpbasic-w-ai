@@ -108,11 +108,4 @@ begin
   end;
 end;
 
-procedure RegisterPreviousData(PreviousData: TPreviousData);
-begin
-end;
 
-function GetCustomSetupExitCode: Integer;
-begin
-  Result := 0;
-end;
