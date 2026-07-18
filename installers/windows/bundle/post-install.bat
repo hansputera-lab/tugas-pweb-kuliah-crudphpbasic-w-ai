@@ -70,13 +70,17 @@ REM Start mysqld — remove --socket on Windows (named pipe conflicts)
 bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% ^
     --bind-address=127.0.0.1 --skip-grant-tables --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 
-REM Give it a moment, then check if the process is actually alive
+REM Give it a moment, then check if the process is alive
 timeout /t 2 /nobreak >nul
-powershell -Command "if (Get-Process -Name '%MYSQLD_BIN%' -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
+tasklist /FI "IMAGENAME eq %MYSQLD_BIN%.exe" /NH 2>nul | findstr /I "%MYSQLD_BIN%" >nul
+if errorlevel 1 (
+    tasklist /FI "IMAGENAME eq mysqld.exe" /NH 2>nul | findstr /I "mysqld" >nul
+)
 if errorlevel 1 (
     echo [HRIS] ERROR: MariaDB process died. Dumping log:>> "%LOG_FILE%"
     if exist "%LOG_DIR%\mariadb.log" (
-        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log'" >> "%LOG_FILE%"
+        type "%LOG_DIR%\mariadb.log" >> "%LOG_FILE%"
+        echo [HRIS] --- mariadb.log ---
         type "%LOG_DIR%\mariadb.log"
     )
     echo [HRIS] ERROR: MariaDB failed to start. Check install.log for details.
@@ -91,16 +95,17 @@ set /a TRY_COUNT+=1
 if !TRY_COUNT! gtr 60 (
     echo [HRIS] ERROR: MariaDB TCP port %DB_PORT% not listening after 60s.>> "%LOG_FILE%"
     if exist "%LOG_DIR%\mariadb.log" (
-        echo [HRIS] Last 20 lines of mariadb.log:>> "%LOG_FILE%"
-        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log' -Tail 20" >> "%LOG_FILE%"
-        echo [HRIS] --- mariadb.log tail ---
-        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log' -Tail 20"
+        echo [HRIS] Full mariadb.log:>> "%LOG_FILE%"
+        type "%LOG_DIR%\mariadb.log" >> "%LOG_FILE%"
+        echo [HRIS] --- mariadb.log ---
+        type "%LOG_DIR%\mariadb.log"
     )
     exit /b 1
 )
 set /a REMAINDER=!TRY_COUNT! %% 5
 if !REMAINDER! equ 0 (echo [HRIS] Waiting for MariaDB TCP port... (!TRY_COUNT!s) & echo [HRIS] Waiting for MariaDB TCP port... (!TRY_COUNT!s)>> "%LOG_FILE%")
-powershell -Command "$tcp=New-Object System.Net.Sockets.TcpClient; $tcp.Connect('127.0.0.1',%DB_PORT%); $tcp.Close()" 2>nul
+REM Check if MariaDB TCP port is listening using netstat
+netstat -an | findstr /C:":%DB_PORT% " >nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait_mysql
@@ -124,11 +129,15 @@ bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% ^
     --bind-address=127.0.0.1 --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 
 timeout /t 2 /nobreak >nul
-powershell -Command "if (Get-Process -Name '%MYSQLD_BIN%' -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
+tasklist /FI "IMAGENAME eq %MYSQLD_BIN%.exe" /NH 2>nul | findstr /I "%MYSQLD_BIN%" >nul
+if errorlevel 1 (
+    tasklist /FI "IMAGENAME eq mysqld.exe" /NH 2>nul | findstr /I "mysqld" >nul
+)
 if errorlevel 1 (
     echo [HRIS] ERROR: MariaDB process died after restart. Dumping log:>> "%LOG_FILE%"
     if exist "%LOG_DIR%\mariadb.log" (
-        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log'" >> "%LOG_FILE%"
+        type "%LOG_DIR%\mariadb.log" >> "%LOG_FILE%"
+        echo [HRIS] --- mariadb.log ---
         type "%LOG_DIR%\mariadb.log"
     )
     echo [HRIS] ERROR: MariaDB failed to restart. Check install.log for details.
@@ -142,16 +151,16 @@ set /a TRY_COUNT+=1
 if !TRY_COUNT! gtr 60 (
     echo [HRIS] ERROR: MariaDB TCP port %DB_PORT% not listening after restart.>> "%LOG_FILE%"
     if exist "%LOG_DIR%\mariadb.log" (
-        echo [HRIS] Last 20 lines of mariadb.log:>> "%LOG_FILE%"
-        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log' -Tail 20" >> "%LOG_FILE%"
-        echo [HRIS] --- mariadb.log tail ---
-        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log' -Tail 20"
+        echo [HRIS] Full mariadb.log:>> "%LOG_FILE%"
+        type "%LOG_DIR%\mariadb.log" >> "%LOG_FILE%"
+        echo [HRIS] --- mariadb.log ---
+        type "%LOG_DIR%\mariadb.log"
     )
     exit /b 1
 )
 set /a REMAINDER=!TRY_COUNT! %% 5
 if !REMAINDER! equ 0 (echo [HRIS] Waiting for MariaDB restart... (!TRY_COUNT!s) & echo [HRIS] Waiting for MariaDB restart... (!TRY_COUNT!s)>> "%LOG_FILE%")
-powershell -Command "$tcp=New-Object System.Net.Sockets.TcpClient; $tcp.Connect('127.0.0.1',%DB_PORT%); $tcp.Close()" 2>nul
+netstat -an | findstr /C:":%DB_PORT% " >nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait_mysql2
