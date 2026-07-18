@@ -63,12 +63,24 @@ REM ============================================
 echo [HRIS] Starting MariaDB... & echo [HRIS] Starting MariaDB...>> "%LOG_FILE%"
 cd /d "%MARIADB_DIR%"
 
+REM Generate my.ini for reliable configuration
+(
+echo [client]
+echo port=%DB_PORT%
+echo.
+echo [mysqld]
+echo port=%DB_PORT%
+echo bind-address=127.0.0.1
+echo datadir="%DATA_DIR%"
+echo skip-networking=0
+) > "%MARIADB_DIR%\my.ini"
+
 REM Remove old log and start fresh
 if exist "%LOG_DIR%\mariadb.log" del "%LOG_DIR%\mariadb.log"
 
-REM Start mysqld — remove --socket on Windows (named pipe conflicts)
-bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% ^
-    --bind-address=127.0.0.1 --skip-grant-tables --console > "%LOG_DIR%\mariadb.log" 2>&1 &
+REM Start mysqld (port etc. read from my.ini, only varying flags on command line)
+bin\%MYSQLD_BIN% --defaults-file="%MARIADB_DIR%\my.ini" ^
+    --skip-grant-tables --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 
 REM Give it a moment, then check if the process is alive
 timeout /t 2 /nobreak >nul
@@ -122,11 +134,11 @@ bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "CREATE DATABASE IF NOT EXI
 bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "GRANT ALL PRIVILEGES ON hris.* TO 'hris'@'localhost';"
 bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "FLUSH PRIVILEGES;"
 
-REM Now restart MariaDB with auth enabled
+REM Now restart MariaDB with auth enabled (no --skip-grant-tables)
 bin\%MYSQLADMIN_BIN% -u root --protocol=tcp --port=%DB_PORT% shutdown
 timeout /t 2 /nobreak >nul
-bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% ^
-    --bind-address=127.0.0.1 --console > "%LOG_DIR%\mariadb.log" 2>&1 &
+bin\%MYSQLD_BIN% --defaults-file="%MARIADB_DIR%\my.ini" ^
+    --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 
 timeout /t 2 /nobreak >nul
 tasklist /FI "IMAGENAME eq %MYSQLD_BIN%.exe" /NH 2>nul | findstr /I "%MYSQLD_BIN%" >nul
@@ -267,7 +279,7 @@ echo [HRIS] Installing Apache service... & echo [HRIS] Installing Apache service
 "%APACHE_DIR%\bin\httpd.exe" -k start -n "HRIS Apache"
 
 echo [HRIS] Installing MariaDB service... & echo [HRIS] Installing MariaDB service...>> "%LOG_FILE%"
-"%MARIADB_DIR%\bin\%MYSQLD_BIN%" --install "HRIS MariaDB" --datadir="%DATA_DIR%" --port=%DB_PORT%
+"%MARIADB_DIR%\bin\%MYSQLD_BIN%" --install "HRIS MariaDB" --defaults-file="%MARIADB_DIR%\my.ini"
 net start "HRIS MariaDB" >nul 2>&1
 
 REM ============================================
