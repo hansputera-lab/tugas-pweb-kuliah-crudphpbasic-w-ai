@@ -210,9 +210,11 @@ Database bisa diakses di `localhost:7775` (user: `sail`, password: `password`).
 | `./sail npm ...` | Menjalankan npm di dalam container |
 | `./sail logs` | Melihat log aplikasi |
 
-### Windows Installer
+### Windows Installer ⚠️ BETA
 
 Download `HRIS-Setup.exe` dari [Releases](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases). Install seperti aplikasi biasa, semua sudah include.
+
+> **Catatan:** Windows Installer masih dalam tahap **beta**. Mungkin masih ada bug. Jika mengalami masalah, gunakan cara XAMPP atau Docker.
 
 ### Linux Installer
 
