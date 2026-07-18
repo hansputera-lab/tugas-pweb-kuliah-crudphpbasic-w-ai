@@ -62,28 +62,44 @@ REM Step 3: Start MariaDB
 REM ============================================
 echo [HRIS] Starting MariaDB... & echo [HRIS] Starting MariaDB...>> "%LOG_FILE%"
 cd /d "%MARIADB_DIR%"
-bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% --socket=mysql.sock ^
-    --skip-grant-tables --console > "%LOG_DIR%\mariadb.log" 2>&1 &
-set MYSQL_PID=!ERRORLEVEL!
-echo [HRIS] MariaDB PID: !MYSQL_PID! & echo [HRIS] MariaDB PID: !MYSQL_PID!>> "%LOG_FILE%"
 
-REM Wait for MariaDB to be ready (max 60 seconds)
+REM Remove old log and start fresh
+if exist "%LOG_DIR%\mariadb.log" del "%LOG_DIR%\mariadb.log"
+
+REM Start mysqld — remove --socket on Windows (named pipe conflicts)
+bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% ^
+    --bind-address=127.0.0.1 --skip-grant-tables --console > "%LOG_DIR%\mariadb.log" 2>&1 &
+
+REM Give it a moment, then check if the process is actually alive
+timeout /t 2 /nobreak >nul
+powershell -Command "if (Get-Process -Name '%MYSQLD_BIN%' -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
+if errorlevel 1 (
+    echo [HRIS] ERROR: MariaDB process died. Dumping log:>> "%LOG_FILE%"
+    if exist "%LOG_DIR%\mariadb.log" (
+        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log'" >> "%LOG_FILE%"
+        type "%LOG_DIR%\mariadb.log"
+    )
+    echo [HRIS] ERROR: MariaDB failed to start. Check install.log for details.
+    exit /b 1
+)
+echo [HRIS] MariaDB process is running. & echo [HRIS] MariaDB process is running.>> "%LOG_FILE%"
+
+REM Wait for the TCP port to be ready (max 60 seconds)
 set TRY_COUNT=0
 :wait_mysql
 set /a TRY_COUNT+=1
 if !TRY_COUNT! gtr 60 (
-    echo [HRIS] ERROR: MariaDB failed to start within 60 seconds.>> "%LOG_FILE%"
+    echo [HRIS] ERROR: MariaDB TCP port %DB_PORT% not listening after 60s.>> "%LOG_FILE%"
     if exist "%LOG_DIR%\mariadb.log" (
         echo [HRIS] Last 20 lines of mariadb.log:>> "%LOG_FILE%"
         powershell -Command "Get-Content '%LOG_DIR%\mariadb.log' -Tail 20" >> "%LOG_FILE%"
+        echo [HRIS] --- mariadb.log tail ---
+        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log' -Tail 20"
     )
-    echo [HRIS] ERROR: MariaDB failed to start. Check %LOG_DIR%\mariadb.log
     exit /b 1
 )
-REM Show a progress dot every 5 seconds
 set /a REMAINDER=!TRY_COUNT! %% 5
-if !REMAINDER! equ 0 (echo [HRIS] Waiting for MariaDB... (!TRY_COUNT!s) & echo [HRIS] Waiting for MariaDB... (!TRY_COUNT!s)>> "%LOG_FILE%")
-REM Check if MariaDB TCP port is listening (more reliable than mysqladmin ping)
+if !REMAINDER! equ 0 (echo [HRIS] Waiting for MariaDB TCP port... (!TRY_COUNT!s) & echo [HRIS] Waiting for MariaDB TCP port... (!TRY_COUNT!s)>> "%LOG_FILE%")
 powershell -Command "$tcp=New-Object System.Net.Sockets.TcpClient; $tcp.Connect('127.0.0.1',%DB_PORT%); $tcp.Close()" 2>nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
@@ -104,19 +120,33 @@ bin\mysql -u root --protocol=tcp --port=%DB_PORT% -e "FLUSH PRIVILEGES;"
 REM Now restart MariaDB with auth enabled
 bin\%MYSQLADMIN_BIN% -u root --protocol=tcp --port=%DB_PORT% shutdown
 timeout /t 2 /nobreak >nul
-bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% --socket=mysql.sock ^
-    --console > "%LOG_DIR%\mariadb.log" 2>&1 &
+bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% ^
+    --bind-address=127.0.0.1 --console > "%LOG_DIR%\mariadb.log" 2>&1 &
+
+timeout /t 2 /nobreak >nul
+powershell -Command "if (Get-Process -Name '%MYSQLD_BIN%' -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
+if errorlevel 1 (
+    echo [HRIS] ERROR: MariaDB process died after restart. Dumping log:>> "%LOG_FILE%"
+    if exist "%LOG_DIR%\mariadb.log" (
+        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log'" >> "%LOG_FILE%"
+        type "%LOG_DIR%\mariadb.log"
+    )
+    echo [HRIS] ERROR: MariaDB failed to restart. Check install.log for details.
+    exit /b 1
+)
+echo [HRIS] MariaDB process restarted. & echo [HRIS] MariaDB process restarted.>> "%LOG_FILE%"
 
 set TRY_COUNT=0
 :wait_mysql2
 set /a TRY_COUNT+=1
 if !TRY_COUNT! gtr 60 (
-    echo [HRIS] ERROR: MariaDB failed to restart within 60 seconds.>> "%LOG_FILE%"
+    echo [HRIS] ERROR: MariaDB TCP port %DB_PORT% not listening after restart.>> "%LOG_FILE%"
     if exist "%LOG_DIR%\mariadb.log" (
         echo [HRIS] Last 20 lines of mariadb.log:>> "%LOG_FILE%"
         powershell -Command "Get-Content '%LOG_DIR%\mariadb.log' -Tail 20" >> "%LOG_FILE%"
+        echo [HRIS] --- mariadb.log tail ---
+        powershell -Command "Get-Content '%LOG_DIR%\mariadb.log' -Tail 20"
     )
-    echo [HRIS] ERROR: MariaDB failed to restart. Check %LOG_DIR%\mariadb.log
     exit /b 1
 )
 set /a REMAINDER=!TRY_COUNT! %% 5
