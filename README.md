@@ -37,278 +37,186 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 | Architecture | Lightweight DDD (Domain-Driven Design) |
 | Build | Vite |
 
-## Prerequisites by Platform
+## Cara Instalasi (Installation Guide)
 
-### Docker (cross-platform)
-- Docker & Docker Compose (or Docker Desktop)
+Panduan ini dibuat khusus untuk pemula. Setiap langkah dijelaskan secara detail.
 
-**Quick start with Laravel Sail:**
+### A. Yang Harus Disiapkan
+
+Download dan install 4 aplikasi berikut (install dengan pengaturan default, next-next saja):
+
+| Aplikasi | Kegunaan | Link Download |
+|----------|----------|---------------|
+| **XAMPP 8.2+** | Web server + database + PHP (semua dalam satu paket) | [apachefriends.org](https://www.apachefriends.org/download.html) |
+| **Composer** | Menginstall library PHP | [getcomposer.org](https://getcomposer.org/download/) |
+| **Node.js** (versi LTS) | Menginstall library JavaScript/CSS | [nodejs.org](https://nodejs.org/) |
+| **Git** | Mengambil project dari GitHub | [git-scm.com](https://git-scm.com/downloads) |
+
+### B. Langkah-Langkah Instalasi
+
+#### Langkah 1: Start XAMPP
+
+1. Buka **XAMPP Control Panel** (cari di Start Menu)
+2. Klik **Start** pada **Apache** — tunggu sampai hijau
+3. Klik **Start** pada **MySQL** — tunggu sampai hijau
+
+> **Fungsinya apa?** Apache = web server yang menjalankan aplikasi. MySQL = database yang menyimpan data (karyawan, absensi, gaji, dll).
+
+#### Langkah 2: Download Project
+
+Buka **Command Prompt (CMD)** atau Terminal, lalu ketik:
 
 ```bash
-# Start all containers (migrations and seeders run automatically)
+cd C:\Users\%USERNAME%\Documents
+git clone https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai.git hris
+cd hris
+```
+
+> **Alternatif:** Klik "Code" → "Download ZIP" di halaman GitHub, lalu extract ke folder Documents.
+
+#### Langkah 3: Install Library PHP (Composer)
+
+```bash
+composer install
+```
+
+Tunggu 2–5 menit. Composer akan mendownload semua library yang dibutuhkan Laravel secara otomatis.
+
+#### Langkah 4: Install Library JavaScript (Node.js)
+
+```bash
+npm install
+npm run build
+```
+
+`npm install` mendownload library (TailwindCSS, Alpine.js, dll).  
+`npm run build` mengubahnya menjadi file CSS/JS yang bisa dibaca browser.
+
+#### Langkah 5: Setup Database
+
+1. Buka browser, ketik: `http://localhost/phpmyadmin`
+2. Klik tab **Databases**, ketik `hris`, pilih **utf8mb4_general_ci**, klik **Create**
+3. Klik tab **Import**, klik **Choose File**, pilih file `database/hris.sql` (dalam folder project)
+4. Klik **Go** (scroll ke bawah)
+
+Tunggu sampai muncul "Import has been successfully finished".
+
+> File `hris.sql` sudah berisi semua tabel + data contoh, jadi tidak perlu membuat tabel satu per satu.
+
+#### Langkah 6: Buat File .env
+
+```bash
+copy .env.example .env
+```
+
+Buka file `.env` dengan **Notepad** atau **VS Code**. Cari baris berikut dan ubah:
+
+```
+DB_CONNECTION=mysql         (ganti dari sqlite menjadi mysql)
+DB_HOST=127.0.0.1           (hapus tanda # di depan)
+DB_PORT=3306                (hapus tanda # di depan)
+DB_DATABASE=hris            (hapus #, ganti laravel jadi hris)
+DB_USERNAME=root            (hapus tanda # di depan)
+DB_PASSWORD=                (hapus tanda # di depan, biarkan kosong)
+```
+
+#### Langkah 7: Generate App Key
+
+```bash
+php artisan key:generate
+```
+
+Membuat kunci pengaman untuk session dan cookies aplikasi.
+
+#### Langkah 8: Jalankan Aplikasi
+
+```bash
+php artisan serve
+```
+
+Akan muncul: `Starting Laravel development server: http://localhost:8000`
+
+Buka browser, ketik `http://localhost:8000`. HRIS siap digunakan!
+
+> **Penting:** Jangan tutup jendela CMD selama ingin menggunakan aplikasi. Tekan `Ctrl + C` untuk menghentikan.
+
+### C. Login
+
+Setelah berhasil menjalankan, login dengan akun berikut:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Super Admin (paling lengkap) | admin@hris.test | password |
+| HR Manager | hr@hris.test | password |
+| Karyawan biasa | employee@hris.test | password |
+
+> Login sebagai **Super Admin** untuk melihat semua fitur.
+
+---
+
+## Cara Lain (Alternatif)
+
+Selain XAMPP, ada 3 cara lain untuk menjalankan HRIS:
+
+**Docker** — Untuk yang sudah paham Docker. Buka terminal di folder project:
+```bash
 ./sail up -d
-
-# Generate app key (first time only — destroys existing key)
 ./sail artisan key:generate
-
-# Access at http://localhost:7774
-# MariaDB runs on localhost:7775 (user: sail, password: password)
 ```
+Akses di `http://localhost:7774` | Database di `localhost:7775` (user: sail, pass: password)
 
-> App runs on port **7774** and MariaDB on port **7775** to avoid conflicts with existing services. You can change these via `APP_PORT` and `FORWARD_DB_PORT` in `.env`.
+**Windows Installer** — Download `HRIS-Setup.exe` dari [Releases](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases). Install seperti aplikasi biasa, semua sudah include.
 
-### Windows (GUI Installer)
-The recommended way is the pre-built `HRIS-Setup.exe` (bundles Apache + PHP + MariaDB, zero dependencies).  
-Source: [`installers/windows/`](installers/windows/).
-
-### Windows (manual / XAMPP)
-- XAMPP 8.2+ (PHP, MySQL, Apache bundled)
-- Composer 2.x
-- Node.js 18+ with npm
-- Git
-
-### Linux (native)
-- PHP 8.2+ with extensions: pdo_mysql, mbstring, openssl, tokenizer, xml, ctype, json, bcmath, gd, fileinfo, zip, intl, curl
-- Composer 2.x
-- Node.js 18+ with npm
-- MySQL 8.0+ or MariaDB 10.4+
-- Nginx or Apache2
-- Git
-
----
-
-## Deployment Guide
-
-The recommended way to deploy HRIS is using the automated installers below.  
-For development, Docker via Laravel Sail is also supported.
-
-**Docker** — `./sail up -d` then `./sail artisan key:generate` (first time only). Migrations and seeders run automatically on container start.
-
-**Windows** — Download the pre-built `HRIS-Setup.exe` from the [Releases page](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases). The source for building it yourself is in [`installers/windows/`](installers/windows/).
-
-**Linux** — Run the installer directly from GitHub (no download needed):
-
+**Linux Installer** — Satu perintah, otomatis:
 ```bash
-# Install with Nginx (one command, zero manual steps)
 curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash -s -- --nginx
-
-# Or with Apache
-curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash -s -- --apache
-
-# Or run interactively (prompts for web server choice)
-curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash
 ```
-
-Supports Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE.  
-See `installers/linux/README.md` for environment variables, uninstall, and distro details.
-
----
-
-> **Manual setup:** If you prefer to set up by hand, refer to the manual steps in the [v1.0.0 tag](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai) or the original [project template](https://github.com/laravel/laravel).
-
-## Alternative: Import SQL Dump (skip migration)
-
-Instead of `migrate --seed`, you can import the full database dump:
-
-```bash
-# Import schema + all sample data
-mysql -u root -p hris < database/hris.sql
-```
-
-This creates all tables, permissions, roles, and seed data in one go.
-
----
-
-## Panduan Deployment (Bahasa Indonesia)
-
-Cara termudah untuk menjalankan HRIS adalah menggunakan installer otomatis di bawah ini.
-
-**Docker** — `./sail up -d` lalu `./sail artisan key:generate` (hanya pertama kali). Migrasi dan seeder berjalan otomatis saat kontainer mulai.
-
-**Windows** — Unduh `HRIS-Setup.exe` dari [halaman Releases](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases). Source code untuk membangun sendiri ada di [`installers/windows/`](installers/windows/).
-
-**Linux** — Jalankan langsung dari GitHub (tanpa download repo):
-
-```bash
-# Install dengan Nginx (satu perintah, tanpa langkah manual)
-curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash -s -- --nginx
-
-# Atau dengan Apache
-curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash -s -- --apache
-
-# Atau interaktif (pilih web server)
-curl -fsSL https://raw.githubusercontent.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/main/installers/linux/install.sh | bash
-```
-
-Mendukung Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE.  
-Lihat `installers/linux/README.md` untuk variabel lingkungan, uninstall, dan detail distribusi.
-
----
-
-> **Setup manual:** Jika ingin melakukan instalasi manual, lihat langkah-langkah di [tag v1.0.0](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai) atau [project template asli](https://github.com/laravel/laravel).
-
-## Alternatif: Import SQL Dump (lewati migrasi)
-
-Sebagai pengganti `migrate --seed`, Anda bisa mengimpor dump database lengkap:
-
-```bash
-# Import skema + semua data contoh
-mysql -u root -p hris < database/hris.sql
-```
-
-Ini akan membuat semua tabel, permissions, roles, dan data seed sekaligus.
 
 ---
 
 ## Pemecahan Masalah (Troubleshooting)
 
+### "php" atau "composer" tidak dikenal (command not found)
+- Buka XAMPP Control Panel, klik **Config** → **PHP (php.ini)** — pastikan path PHP sudah terdaftar
+- Alternatif: gunakan path lengkap, contoh: `C:\xampp\php\php.exe artisan key:generate`
+
+### "SQLSTATE[HY000] Connection refused"
+- Pastikan **MySQL** sudah **Start** di XAMPP Control Panel (warna hijau)
+- Cek file `.env` — pastikan `DB_HOST=127.0.0.1` dan `DB_PORT=3306`
+- Coba buka `http://localhost/phpmyadmin` — jika bisa, berarti MySQL berjalan normal
+
+### "Vite manifest not found" (tampilan berantakan, tanpa CSS)
+```bash
+npm install && npm run build
+```
+
 ### "Class not found"
 ```bash
 composer dump-autoload
 ```
 
-### "Vite manifest not found" (halaman kosong, tidak ada CSS)
+### 500 Server Error
 ```bash
-npm install && npm run build
-```
+# Cek log error Laravel (buka file ini di Notepad)
+storage/logs/laravel.log
 
-### 500 Server Error setelah deployment
-```bash
-# Cek log Laravel
-tail -f storage/logs/laravel.log
-
-# Perbaiki kepemilikan file (penyebab umum)
-sudo chown -R www-data:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
-
-# Cache ulang views
+# Hapus cache
 php artisan view:cache
+php artisan config:cache
 ```
 
 ### "SQLSTATE[42S02] Table not found"
-```bash
-php artisan migrate --seed --force
-```
-
-### "SQLSTATE[HY000] Connection refused"
-- Periksa apakah MySQL berjalan: `sudo systemctl status mysql`
-- Verifikasi kredensial `.env`
-- Pastikan database ada: `mysql -u root -p -e "SHOW DATABASES;"`
+- Buka `http://localhost/phpmyadmin`, pilih database `hris`, cek apakah ada tabel-tabel di dalamnya
+- Jika kosong, import ulang file `database/hris.sql`
 
 ### Storage/upload tidak berfungsi
 ```bash
 php artisan storage:link
-chmod -R 775 storage/app/public
 ```
 
-### Permission denied di storage
-```bash
-sudo chown -R www-data:www-data storage
-sudo chmod -R 775 storage
-```
-
-### "403 Forbidden" pada route
-- User tidak memiliki permission yang diperlukan untuk modul tersebut
-- Verifikasi role user telah diberikan permission yang benar
-
----
-
-## Default Login Credentials
-
-| Role | Email | Password |
-|------|-------|----------|
-| Super Admin | admin@hris.test | password |
-| HR Manager | hr@hris.test | password |
-| Manager | manager@hris.test | password |
-| Payroll Specialist | payroll@hris.test | password |
-| Executive | executive@hris.test | password |
-| Recruiter | recruiter@hris.test | password |
-| IT Admin | itadmin@hris.test | password |
-| Employee (Rina) | rina@hris.test | password |
-| Employee (Budi) | budi@hris.test | password |
-| Employee | employee@hris.test | password |
-
-> **Note:** All accounts use `password` as the default. Change these in production.
-
-## Project Structure (DDD Architecture)
-
-```
-hris/
-├── app/
-│   ├── Domains/                      # Business logic (vertical slices)
-│   │   ├── Auth/                     # Roles & Permissions
-│   │   ├── Employee/                 # Employee module (manager hierarchy)
-│   │   ├── Department/               # Department module
-│   │   ├── Position/                 # Position module
-│   │   ├── Attendance/               # Attendance module
-│   │   ├── Leave/                    # Leave module
-│   │   ├── Recruitment/              # Job postings → Candidates → Interviews → Onboarding
-│   │   ├── Payroll/                  # Payroll + documents
-│   │   ├── Reimbursement/            # Claims, approval levels
-│   │   ├── Shift/                    # Shifts, overtime
-│   │   ├── Performance/              # KPIs, appraisals, 360 feedback
-│   │   ├── ActivityLog/              # Audit trail
-│   │   └── Settings/                 # App configuration
-│   ├── Http/                         # Controllers, Middleware, Requests
-│   ├── Models/                       # User model
-│   └── Providers/                    # Service Providers
-├── config/
-├── database/                         # Migrations, seeders, SQL dump
-├── resources/views/                  # Blade templates
-├── routes/                           # Route definitions
-└── public/
-```
-
-## Troubleshooting
-
-### "Class not found"
-```bash
-composer dump-autoload
-```
-
-### "Vite manifest not found" (blank page, no CSS)
-```bash
-npm install && npm run build
-```
-
-### 500 Server Error after deployment
-```bash
-# Check Laravel log
-tail -f storage/logs/laravel.log
-
-# Fix file ownership (common cause)
-sudo chown -R www-data:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
-
-# Re-cache views
-php artisan view:cache
-```
-
-### "SQLSTATE[42S02] Table not found"
-```bash
-php artisan migrate --seed --force
-```
-
-### "SQLSTATE[HY000] Connection refused"
-- Check MySQL is running: `sudo systemctl status mysql`
-- Verify `.env` credentials
-- Confirm database exists: `mysql -u root -p -e "SHOW DATABASES;"`
-
-### Storage/upload not working
-```bash
-php artisan storage:link
-chmod -R 775 storage/app/public
-```
-
-### Permission denied in storage
-```bash
-sudo chown -R www-data:www-data storage
-sudo chmod -R 775 storage
-```
-
-### "403 Forbidden" on routes
-- User lacks the required permission for that module
-- Verify user's role has the correct permissions assigned
+### "403 Forbidden" saat membuka halaman
+- Akun yang kamu pakai mungkin tidak memiliki akses ke fitur tersebut
+- Coba login sebagai **admin@hris.test** (Super Admin) yang memiliki akses penuh
 
 ## License
 
