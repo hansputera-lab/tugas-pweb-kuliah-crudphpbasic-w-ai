@@ -78,4 +78,17 @@ Filename: "http://localhost"; Description: "Launch HRIS"; Flags: postinstall now
 [UninstallRun]
 Filename: "{app}\stop.bat"; WorkingDir: "{app}"; Flags: runhidden
 
+[UninstallDelete]
+Name: "{app}\data"; Type: filesandordirs
+Name: "{app}\logs"; Type: filesandordirs
+Name: "{app}\install.log"; Type: files
+Name: "{app}\credentials.txt"; Type: files
+Name: "{app}\hris\.env"; Type: files
+Name: "{app}\hris\storage"; Type: filesandordirs
+Name: "{app}\hris\bootstrap\cache"; Type: filesandordirs
+Name: "{app}\hris\public\build"; Type: filesandordirs
+Name: "{app}\hris\public\uploads"; Type: filesandordirs
+Name: "{app}\hris\node_modules"; Type: filesandordirs
+Name: "{app}\hris\vendor"; Type: filesandordirs
+
 

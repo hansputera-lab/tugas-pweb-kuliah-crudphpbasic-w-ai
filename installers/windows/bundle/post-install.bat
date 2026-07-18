@@ -65,8 +65,15 @@ bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=3306 --socket=mysql.sock ^
 set MYSQL_PID=!ERRORLEVEL!
 echo [HRIS] MariaDB PID: !MYSQL_PID! & echo [HRIS] MariaDB PID: !MYSQL_PID!>> "%LOG_FILE%"
 
-REM Wait for MariaDB to be ready
+REM Wait for MariaDB to be ready (max 30 seconds)
+set TRY_COUNT=0
 :wait_mysql
+set /a TRY_COUNT+=1
+if !TRY_COUNT! gtr 30 (
+    echo [HRIS] ERROR: MariaDB failed to start. Check %LOG_DIR%\mariadb.log>> "%LOG_FILE%"
+    echo [HRIS] ERROR: MariaDB failed to start. See install.log for details.
+    exit /b 1
+)
 bin\%MYSQLADMIN_BIN% ping --silent 2>nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
@@ -90,7 +97,14 @@ timeout /t 2 /nobreak >nul
 bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=3306 --socket=mysql.sock ^
     --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 
+set TRY_COUNT=0
 :wait_mysql2
+set /a TRY_COUNT+=1
+if !TRY_COUNT! gtr 30 (
+    echo [HRIS] ERROR: MariaDB failed to restart. Check %LOG_DIR%\mariadb.log>> "%LOG_FILE%"
+    echo [HRIS] ERROR: MariaDB failed to restart. See install.log for details.
+    exit /b 1
+)
 bin\%MYSQLADMIN_BIN% ping --silent 2>nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
