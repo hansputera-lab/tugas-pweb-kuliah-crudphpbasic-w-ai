@@ -12,8 +12,10 @@ set DATA_DIR=%INSTALL_DIR%\data
 set LOG_DIR=%INSTALL_DIR%\logs
 set LOG_FILE=%INSTALL_DIR%\install.log
 set MYSQLD_BIN=mysqld
+set MYSQLADMIN_BIN=mysqladmin
 
 if exist "%MARIADB_DIR%\bin\mariadbd.exe" set MYSQLD_BIN=mariadbd
+if exist "%MARIADB_DIR%\bin\mariadb-admin.exe" set MYSQLADMIN_BIN=mariadb-admin
 
 echo [HRIS] Post-install setup starting... & echo [HRIS] Post-install setup starting...> "%LOG_FILE%"
 
@@ -65,7 +67,7 @@ echo [HRIS] MariaDB PID: !MYSQL_PID! & echo [HRIS] MariaDB PID: !MYSQL_PID!>> "%
 
 REM Wait for MariaDB to be ready
 :wait_mysql
-bin\mysqladmin ping --silent 2>nul
+bin\%MYSQLADMIN_BIN% ping --silent 2>nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait_mysql
@@ -83,13 +85,13 @@ bin\mysql -u root -e "GRANT ALL PRIVILEGES ON hris.* TO 'hris'@'localhost';"
 bin\mysql -u root -e "FLUSH PRIVILEGES;"
 
 REM Now restart MariaDB with auth enabled
-bin\mysqladmin -u root shutdown
+bin\%MYSQLADMIN_BIN% -u root shutdown
 timeout /t 2 /nobreak >nul
 bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=3306 --socket=mysql.sock ^
     --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 
 :wait_mysql2
-bin\mysqladmin ping --silent 2>nul
+bin\%MYSQLADMIN_BIN% ping --silent 2>nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait_mysql2
@@ -202,7 +204,7 @@ REM ============================================
 REM Step 10: Cleanup
 REM ============================================
 REM Stop the temporary MariaDB instance and let the service take over
-"%MARIADB_DIR%\bin\mysqladmin" -u root shutdown 2>nul
+"%MARIADB_DIR%\bin\%MYSQLADMIN_BIN%" -u root shutdown 2>nul
 
 echo [HRIS] Setup complete! & echo [HRIS] Setup complete!>> "%LOG_FILE%"
 echo [HRIS] You can now access HRIS at http://localhost & echo [HRIS] You can now access HRIS at http://localhost>> "%LOG_FILE%"
@@ -225,7 +227,11 @@ exit /b 0
 :init_datadir
 echo [HRIS] Initializing MariaDB data directory...
 echo [HRIS] Trying mariadb-install-db...>> "%LOG_FILE%"
-bin\mariadb-install-db.exe --datadir="%DATA_DIR%" --force --auth-root-authentication-method=normal
+bin\mariadb-install-db.exe --datadir="%DATA_DIR%"
+if not errorlevel 1 goto :eof
+
+echo [HRIS] Trying mysql_install_db...>> "%LOG_FILE%"
+bin\mysql_install_db.exe --datadir="%DATA_DIR%"
 if not errorlevel 1 goto :eof
 
 echo [HRIS] Trying %MYSQLD_BIN% --initialize-insecure...>> "%LOG_FILE%"
@@ -234,10 +240,6 @@ if not errorlevel 1 goto :eof
 
 echo [HRIS] Trying %MYSQLD_BIN% --initialize...>> "%LOG_FILE%"
 bin\%MYSQLD_BIN% --initialize --datadir="%DATA_DIR%"
-if not errorlevel 1 goto :eof
-
-echo [HRIS] Trying mysql_install_db...>> "%LOG_FILE%"
-bin\mysql_install_db.exe --datadir="%DATA_DIR%" --force
 if not errorlevel 1 goto :eof
 
 echo [HRIS] ERROR: All data directory initialization methods failed.>> "%LOG_FILE%"
