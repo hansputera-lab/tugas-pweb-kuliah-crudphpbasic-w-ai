@@ -72,7 +72,7 @@ Name: "{group}\Uninstall HRIS"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\HRIS"; Filename: "http://localhost"
 
 [Run]
-Filename: "{app}\post-install.bat"; Parameters: """{app}"""; WorkingDir: "{app}"; StatusMsg: "Configuring HRIS... (this may take a minute)"; Flags: runhidden
+Filename: "{app}\post-install.bat"; Parameters: """{app}"""; WorkingDir: "{app}"; StatusMsg: "Configuring HRIS... (this may take a minute)"
 Filename: "http://localhost"; Description: "Launch HRIS"; Flags: postinstall nowait skipifsilent shellexec
 
 [UninstallRun]
