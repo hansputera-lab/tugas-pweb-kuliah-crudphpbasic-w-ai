@@ -36,11 +36,7 @@ if not exist "bin\%MYSQLD_BIN%.exe" if not exist "bin\mysqld.exe" (
 )
 
 if not exist "%DATA_DIR%\mysql" (
-    REM Try multiple initialization methods for different MariaDB/MySQL versions
-    bin\%MYSQLD_BIN% --initialize-insecure --datadir="%DATA_DIR%" --console || ^
-    bin\%MYSQLD_BIN% --initialize --datadir="%DATA_DIR%" --console || ^
-    bin\mariadb-install-db.exe --datadir="%DATA_DIR%" --force || ^
-    bin\mysql_install_db.exe --datadir="%DATA_DIR%" --force
+    call :init_datadir
 )
 echo [HRIS] MariaDB data directory initialized. & echo [HRIS] MariaDB data directory initialized.>> "%LOG_FILE%"
 
@@ -225,3 +221,25 @@ echo.
 echo Default login: admin@hris.test / password
 ) > "%INSTALL_DIR%\credentials.txt"
 exit /b 0
+
+:init_datadir
+echo [HRIS] Initializing MariaDB data directory...
+echo [HRIS] Trying mariadb-install-db...>> "%LOG_FILE%"
+bin\mariadb-install-db.exe --datadir="%DATA_DIR%" --force --auth-root-authentication-method=normal
+if not errorlevel 1 goto :eof
+
+echo [HRIS] Trying %MYSQLD_BIN% --initialize-insecure...>> "%LOG_FILE%"
+bin\%MYSQLD_BIN% --initialize-insecure --datadir="%DATA_DIR%"
+if not errorlevel 1 goto :eof
+
+echo [HRIS] Trying %MYSQLD_BIN% --initialize...>> "%LOG_FILE%"
+bin\%MYSQLD_BIN% --initialize --datadir="%DATA_DIR%"
+if not errorlevel 1 goto :eof
+
+echo [HRIS] Trying mysql_install_db...>> "%LOG_FILE%"
+bin\mysql_install_db.exe --datadir="%DATA_DIR%" --force
+if not errorlevel 1 goto :eof
+
+echo [HRIS] ERROR: All data directory initialization methods failed.>> "%LOG_FILE%"
+echo [HRIS] ERROR: Could not initialize MariaDB data directory. See install.log for details.
+exit /b 1

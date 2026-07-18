@@ -17,7 +17,11 @@ Extract each into its respective folder under `bundle/`:
 |-----------|-------------|------------|
 | Apache 2.4 (VS17 x64) | https://www.apachelounge.com/download/ | `bundle/apache/` |
 | PHP 8.2 TS (x64) | https://windows.php.net/download#php-8.2 | `bundle/php/` |
-| MariaDB 10.4 (ZIP) | https://mariadb.org/download/?t=mariadb&p=mariadb | `bundle/mariadb/` |
+| MariaDB 11.x (ZIP) | https://mariadb.org/download/?t=mariadb&p=mariadb | `bundle/mariadb/` |
+
+**MariaDB notes:**
+- Compatible with MariaDB 10.4 through 11.x. Avoid MariaDB 12+ (binary rename breakage).
+- Extract so that `bin/mariadbd.exe` (or `bin/mysqld.exe`) is directly under `bundle/mariadb/bin/`.
 
 **PHP notes:**
 - Download the **Thread Safe** (TS) version
