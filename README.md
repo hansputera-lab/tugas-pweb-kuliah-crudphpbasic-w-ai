@@ -23,7 +23,7 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 - **Admin Config** — Working hours, grace period, company name, payroll defaults, KPI thresholds (all configurable via UI)
 - **Currency Input Formatting** — All monetary input fields auto-format with `toLocaleString('id-ID')` as you type (formatted decimals on blur, raw numbers on focus for editing, auto-stripped on submit)
 - **Frontend Form Validation** — All forms validate before submission using HTML5 constraints + custom JS: required fields, email format, min/max ranges, maxlength, radio groups; inline red error messages with styled borders; currency inputs unformatted before validation then reformatted on failure
-- **Cross-platform Installers** — Windows GUI installer (bundles portable Apache + PHP + MariaDB, click-click setup) and Linux multi-distro bash installer (supports Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE)
+- **Cross-platform Installers** — Windows GUI installer (bundles portable Apache + PHP + MariaDB, click-click setup), Linux multi-distro bash installer (supports Ubuntu, Debian, CentOS, RHEL, Fedora, Arch, openSUSE), and Docker via Laravel Sail (auto-seed on start)
 
 ## Tech Stack
 
@@ -45,14 +45,11 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 **Quick start with Laravel Sail:**
 
 ```bash
-# Start all containers in background
+# Start all containers (migrations and seeders run automatically)
 ./sail up -d
 
-# Generate app key (first time only)
+# Generate app key (first time only — destroys existing key)
 ./sail artisan key:generate
-
-# Run migrations and seeders
-./sail artisan migrate --seed
 
 # Access at http://localhost:7774
 # MariaDB runs on localhost:7775 (user: sail, password: password)
@@ -60,7 +57,11 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 
 > App runs on port **7774** and MariaDB on port **7775** to avoid conflicts with existing services. You can change these via `APP_PORT` and `FORWARD_DB_PORT` in `.env`.
 
-### Windows (XAMPP)
+### Windows (GUI Installer)
+The recommended way is the pre-built `HRIS-Setup.exe` (bundles Apache + PHP + MariaDB, zero dependencies).  
+Source: [`installers/windows/`](installers/windows/).
+
+### Windows (manual / XAMPP)
 - XAMPP 8.2+ (PHP, MySQL, Apache bundled)
 - Composer 2.x
 - Node.js 18+ with npm
@@ -81,7 +82,7 @@ A lightweight but complete HRIS built with **Laravel 11**, **TailwindCSS**, **Ch
 The recommended way to deploy HRIS is using the automated installers below.  
 For development, Docker via Laravel Sail is also supported.
 
-**Docker** — `./sail up -d` then `./sail artisan migrate --seed`. See details above.
+**Docker** — `./sail up -d` then `./sail artisan key:generate` (first time only). Migrations and seeders run automatically on container start.
 
 **Windows** — Download the pre-built `HRIS-Setup.exe` from the [Releases page](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases). The source for building it yourself is in [`installers/windows/`](installers/windows/).
 
@@ -121,6 +122,8 @@ This creates all tables, permissions, roles, and seed data in one go.
 ## Panduan Deployment (Bahasa Indonesia)
 
 Cara termudah untuk menjalankan HRIS adalah menggunakan installer otomatis di bawah ini.
+
+**Docker** — `./sail up -d` lalu `./sail artisan key:generate` (hanya pertama kali). Migrasi dan seeder berjalan otomatis saat kontainer mulai.
 
 **Windows** — Unduh `HRIS-Setup.exe` dari [halaman Releases](https://github.com/hansputera-lab/tugas-pweb-kuliah-crudphpbasic-w-ai/releases). Source code untuk membangun sendiri ada di [`installers/windows/`](installers/windows/).
 
