@@ -32,7 +32,7 @@ CloseApplications=no
 SetupLogging=yes
 
 [Languages]
-Name: "english"; MessagesFile: "compiler:Default.iso"
+Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "indonesian"; MessagesFile: "compiler:Languages\Indonesian.isl"
 
 [Types]
