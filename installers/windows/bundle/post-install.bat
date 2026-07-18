@@ -83,7 +83,8 @@ if !TRY_COUNT! gtr 60 (
 REM Show a progress dot every 5 seconds
 set /a REMAINDER=!TRY_COUNT! %% 5
 if !REMAINDER! equ 0 (echo [HRIS] Waiting for MariaDB... (!TRY_COUNT!s) & echo [HRIS] Waiting for MariaDB... (!TRY_COUNT!s)>> "%LOG_FILE%")
-bin\%MYSQLADMIN_BIN% ping --protocol=tcp --port=%DB_PORT% --silent 2>nul
+REM Check if MariaDB TCP port is listening (more reliable than mysqladmin ping)
+powershell -Command "$tcp=New-Object System.Net.Sockets.TcpClient; $tcp.Connect('127.0.0.1',%DB_PORT%); $tcp.Close()" 2>nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait_mysql
@@ -120,7 +121,7 @@ if !TRY_COUNT! gtr 60 (
 )
 set /a REMAINDER=!TRY_COUNT! %% 5
 if !REMAINDER! equ 0 (echo [HRIS] Waiting for MariaDB restart... (!TRY_COUNT!s) & echo [HRIS] Waiting for MariaDB restart... (!TRY_COUNT!s)>> "%LOG_FILE%")
-bin\%MYSQLADMIN_BIN% ping --protocol=tcp --port=%DB_PORT% --silent 2>nul
+powershell -Command "$tcp=New-Object System.Net.Sockets.TcpClient; $tcp.Connect('127.0.0.1',%DB_PORT%); $tcp.Close()" 2>nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait_mysql2
