@@ -14,13 +14,24 @@ set LOG_FILE=%INSTALL_DIR%\install.log
 
 echo [HRIS] Post-install setup starting... & echo [HRIS] Post-install setup starting...> "%LOG_FILE%"
 
+if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
+if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
+
+echo [HRIS] Install dir: %INSTALL_DIR%>> "%LOG_FILE%"
+
 REM ============================================
 REM Step 1: Initialize MariaDB
 REM ============================================
 echo [HRIS] Initializing MariaDB... & echo [HRIS] Initializing MariaDB...>> "%LOG_FILE%"
-if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
-
 cd /d "%MARIADB_DIR%"
+
+REM Verify MariaDB binaries exist
+if not exist "bin\mysqld.exe" (
+    echo [HRIS] ERROR: MariaDB binaries not found at %MARIADB_DIR%\bin\>> "%LOG_FILE%"
+    echo [HRIS] ERROR: MariaDB binaries not found. Check bundle/mariadb/ structure.
+    exit /b 1
+)
+
 if not exist "%DATA_DIR%\mysql" (
     bin\mysqld --initialize-insecure --datadir="%DATA_DIR%" --console
 )
