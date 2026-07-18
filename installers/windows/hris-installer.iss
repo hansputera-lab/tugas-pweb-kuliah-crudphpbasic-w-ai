@@ -88,13 +88,6 @@ begin
   InfoPage := CreateOutputProgressPage('Installing', 'Setting up HRIS components...');
 end;
 
-function PrepareToInstall(var NeedsRestart: Boolean): Boolean;
-var
-  ResultCode: Integer;
-begin
-  Result := True;
-end;
-
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssInstall then
