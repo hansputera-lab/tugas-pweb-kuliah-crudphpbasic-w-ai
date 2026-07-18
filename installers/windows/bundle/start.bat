@@ -2,6 +2,8 @@
 title HRIS - Starting Services
 
 set INSTALL_DIR=%~dp0
+set HTTP_PORT=7774
+set DB_PORT=7775
 
 echo Starting HRIS services...
 echo.
@@ -13,7 +15,7 @@ if exist "%INSTALL_DIR%mariadb\bin\mariadbd.exe" set MYSQLD_BIN=mariadbd
 echo [1/2] Starting MariaDB...
 net start "HRIS MariaDB" 2>nul
 if errorlevel 1 (
-    "%INSTALL_DIR%mariadb\bin\%MYSQLD_BIN%" --datadir="%INSTALL_DIR%data" --port=3306 --console
+    "%INSTALL_DIR%mariadb\bin\%MYSQLD_BIN%" --datadir="%INSTALL_DIR%data" --port=%DB_PORT% --console
 )
 echo   MariaDB is running.
 
@@ -25,8 +27,8 @@ if errorlevel 1 (
 echo   Apache is running.
 
 echo.
-echo HRIS is now available at http://localhost
+echo HRIS is now available at http://localhost:%HTTP_PORT%
 echo.
 echo Press any key to open HRIS in your browser...
 pause >nul
-start http://localhost
+start http://localhost:%HTTP_PORT%

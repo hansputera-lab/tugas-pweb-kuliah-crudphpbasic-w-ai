@@ -10,7 +10,7 @@
 #define MyAppName "HRIS"
 #define MyAppVersion "1.0"
 #define MyAppPublisher "HRIS Team"
-#define MyAppURL "http://localhost"
+#define MyAppURL "http://localhost:7774"
 #define MyAppExeName "start.bat"
 
 [Setup]
@@ -67,13 +67,13 @@ Source: "bundle\hris.ico"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedo
 [Icons]
 Name: "{group}\Start HRIS"; Filename: "{app}\start.bat"; WorkingDir: "{app}"; IconFilename: "{app}\hris.ico"
 Name: "{group}\Stop HRIS"; Filename: "{app}\stop.bat"; WorkingDir: "{app}"; IconFilename: "{app}\hris.ico"
-Name: "{group}\Open HRIS"; Filename: "http://localhost"
+Name: "{group}\Open HRIS"; Filename: "{#MyAppURL}"
 Name: "{group}\Uninstall HRIS"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\HRIS"; Filename: "http://localhost"
+Name: "{commondesktop}\HRIS"; Filename: "{#MyAppURL}"
 
 [Run]
 Filename: "{app}\post-install.bat"; Parameters: """{app}"""; WorkingDir: "{app}"; StatusMsg: "Configuring HRIS... (this may take a minute)"
-Filename: "http://localhost"; Description: "Launch HRIS"; Flags: postinstall nowait skipifsilent shellexec
+Filename: "{#MyAppURL}"; Description: "Launch HRIS"; Flags: postinstall nowait skipifsilent shellexec
 
 [UninstallRun]
 Filename: "{app}\stop.bat"; WorkingDir: "{app}"; Flags: runhidden

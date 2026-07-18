@@ -11,6 +11,8 @@ set HRIS_DIR=%INSTALL_DIR%\hris
 set DATA_DIR=%INSTALL_DIR%\data
 set LOG_DIR=%INSTALL_DIR%\logs
 set LOG_FILE=%INSTALL_DIR%\install.log
+set HTTP_PORT=7774
+set DB_PORT=7775
 set MYSQLD_BIN=mysqld
 set MYSQLADMIN_BIN=mysqladmin
 
@@ -60,7 +62,7 @@ REM Step 3: Start MariaDB
 REM ============================================
 echo [HRIS] Starting MariaDB... & echo [HRIS] Starting MariaDB...>> "%LOG_FILE%"
 cd /d "%MARIADB_DIR%"
-bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=3306 --socket=mysql.sock ^
+bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% --socket=mysql.sock ^
     --skip-grant-tables --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 set MYSQL_PID=!ERRORLEVEL!
 echo [HRIS] MariaDB PID: !MYSQL_PID! & echo [HRIS] MariaDB PID: !MYSQL_PID!>> "%LOG_FILE%"
@@ -74,7 +76,7 @@ if !TRY_COUNT! gtr 30 (
     echo [HRIS] ERROR: MariaDB failed to start. See install.log for details.
     exit /b 1
 )
-bin\%MYSQLADMIN_BIN% ping --silent 2>nul
+bin\%MYSQLADMIN_BIN% ping --port=%DB_PORT% --silent 2>nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait_mysql
@@ -85,16 +87,16 @@ REM ============================================
 REM Step 4: Create database and user
 REM ============================================
 echo [HRIS] Creating database and user... & echo [HRIS] Creating database and user...>> "%LOG_FILE%"
-bin\mysql -u root -e "DROP USER IF EXISTS 'hris'@'localhost';" 2>nul
-bin\mysql -u root -e "CREATE USER 'hris'@'localhost' IDENTIFIED BY '%DB_PASS%';"
-bin\mysql -u root -e "CREATE DATABASE IF NOT EXISTS hris CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-bin\mysql -u root -e "GRANT ALL PRIVILEGES ON hris.* TO 'hris'@'localhost';"
-bin\mysql -u root -e "FLUSH PRIVILEGES;"
+bin\mysql -u root --port=%DB_PORT% -e "DROP USER IF EXISTS 'hris'@'localhost';" 2>nul
+bin\mysql -u root --port=%DB_PORT% -e "CREATE USER 'hris'@'localhost' IDENTIFIED BY '%DB_PASS%';"
+bin\mysql -u root --port=%DB_PORT% -e "CREATE DATABASE IF NOT EXISTS hris CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+bin\mysql -u root --port=%DB_PORT% -e "GRANT ALL PRIVILEGES ON hris.* TO 'hris'@'localhost';"
+bin\mysql -u root --port=%DB_PORT% -e "FLUSH PRIVILEGES;"
 
 REM Now restart MariaDB with auth enabled
-bin\%MYSQLADMIN_BIN% -u root shutdown
+bin\%MYSQLADMIN_BIN% -u root --port=%DB_PORT% shutdown
 timeout /t 2 /nobreak >nul
-bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=3306 --socket=mysql.sock ^
+bin\%MYSQLD_BIN% --datadir="%DATA_DIR%" --port=%DB_PORT% --socket=mysql.sock ^
     --console > "%LOG_DIR%\mariadb.log" 2>&1 &
 
 set TRY_COUNT=0
@@ -105,7 +107,7 @@ if !TRY_COUNT! gtr 30 (
     echo [HRIS] ERROR: MariaDB failed to restart. See install.log for details.
     exit /b 1
 )
-bin\%MYSQLADMIN_BIN% ping --silent 2>nul
+bin\%MYSQLADMIN_BIN% ping --port=%DB_PORT% --silent 2>nul
 if errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait_mysql2
@@ -122,12 +124,13 @@ if exist .env.example (
     copy /Y .env.example .env >nul
 )
 
-REM Update .env with database credentials
-powershell -Command "(Get-Content .env) -replace 'DB_DATABASE=.*', 'DB_DATABASE=hris' | Set-Content .env"
-powershell -Command "(Get-Content .env) -replace 'DB_USERNAME=.*', 'DB_USERNAME=hris' | Set-Content .env"
-powershell -Command "(Get-Content .env) -replace 'DB_PASSWORD=.*', 'DB_PASSWORD=%DB_PASS%' | Set-Content .env"
-powershell -Command "(Get-Content .env) -replace 'DB_HOST=.*', 'DB_HOST=127.0.0.1' | Set-Content .env"
-powershell -Command "(Get-Content .env) -replace 'APP_URL=.*', 'APP_URL=http://localhost' | Set-Content .env"
+REM Update .env with database credentials (uncomment and set values)
+powershell -Command "(Get-Content .env) -replace '# DB_DATABASE=.*', 'DB_DATABASE=hris' | Set-Content .env"
+powershell -Command "(Get-Content .env) -replace '# DB_USERNAME=.*', 'DB_USERNAME=hris' | Set-Content .env"
+powershell -Command "(Get-Content .env) -replace '# DB_PASSWORD=.*', 'DB_PASSWORD=%DB_PASS%' | Set-Content .env"
+powershell -Command "(Get-Content .env) -replace '# DB_HOST=.*', 'DB_HOST=127.0.0.1' | Set-Content .env"
+powershell -Command "(Get-Content .env) -replace '# DB_PORT=.*', 'DB_PORT=%DB_PORT%' | Set-Content .env"
+powershell -Command "(Get-Content .env) -replace 'APP_URL=.*', 'APP_URL=http://localhost:%HTTP_PORT%' | Set-Content .env"
 
 REM ============================================
 REM Step 6: Configure Apache
@@ -138,8 +141,8 @@ cd /d "%APACHE_DIR%"
 REM Generate httpd.conf
 (
 echo ServerRoot "%APACHE_DIR:\=\\%"
-echo ServerName localhost:80
-echo Listen 80
+echo ServerName localhost:%HTTP_PORT%
+echo Listen %HTTP_PORT%
 echo DocumentRoot "%HRIS_DIR:\=\\%\\public"
 echo ^<Directory "%HRIS_DIR:\=\\%\\public"^>
 echo     Options Indexes FollowSymLinks
@@ -211,17 +214,17 @@ echo [HRIS] Installing Apache service... & echo [HRIS] Installing Apache service
 "%APACHE_DIR%\bin\httpd.exe" -k start -n "HRIS Apache"
 
 echo [HRIS] Installing MariaDB service... & echo [HRIS] Installing MariaDB service...>> "%LOG_FILE%"
-"%MARIADB_DIR%\bin\%MYSQLD_BIN%" --install "HRIS MariaDB" --datadir="%DATA_DIR%" --port=3306
+"%MARIADB_DIR%\bin\%MYSQLD_BIN%" --install "HRIS MariaDB" --datadir="%DATA_DIR%" --port=%DB_PORT%
 net start "HRIS MariaDB" >nul 2>&1
 
 REM ============================================
 REM Step 10: Cleanup
 REM ============================================
 REM Stop the temporary MariaDB instance and let the service take over
-"%MARIADB_DIR%\bin\%MYSQLADMIN_BIN%" -u root shutdown 2>nul
+"%MARIADB_DIR%\bin\%MYSQLADMIN_BIN%" -u root --port=%DB_PORT% shutdown 2>nul
 
 echo [HRIS] Setup complete! & echo [HRIS] Setup complete!>> "%LOG_FILE%"
-echo [HRIS] You can now access HRIS at http://localhost & echo [HRIS] You can now access HRIS at http://localhost>> "%LOG_FILE%"
+echo [HRIS] You can now access HRIS at http://localhost:%HTTP_PORT% & echo [HRIS] You can now access HRIS at http://localhost:%HTTP_PORT%>> "%LOG_FILE%"
 echo [HRIS] Database password: %DB_PASS% & echo [HRIS] Database password: %DB_PASS%>> "%LOG_FILE%"
 
 REM Save credentials to a note file
@@ -229,10 +232,11 @@ REM Save credentials to a note file
 echo HRIS Installation Summary
 echo ========================
 echo.
-echo URL: http://localhost
+echo URL: http://localhost:%HTTP_PORT%
 echo Database: hris
 echo Username: hris
 echo Password: %DB_PASS%
+echo Database Port: %DB_PORT%
 echo.
 echo Default login: admin@hris.test / password
 ) > "%INSTALL_DIR%\credentials.txt"
